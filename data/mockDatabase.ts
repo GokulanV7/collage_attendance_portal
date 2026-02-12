@@ -6,6 +6,7 @@ export const batches: Batch[] = [
   { id: "2023-2027", name: "2023–2027" },
 ];
 
+//gokul12
 // Sample students for different departments and classes
 const cseStudentsA: Student[] = [
   { id: "CS23A01", name: "Arun Kumar", rollNo: "23CSE001" },
