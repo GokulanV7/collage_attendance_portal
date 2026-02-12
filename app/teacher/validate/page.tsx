@@ -51,21 +51,6 @@ export default function TeacherValidate() {
       <Card className="max-w-md mx-auto">
         <div className="space-y-6">
           <div className="text-center">
-            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-primary-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                />
-              </svg>
-            </div>
             <h2 className="text-lg font-semibold text-gray-900">
               Staff Authentication
             </h2>
@@ -84,7 +69,7 @@ export default function TeacherValidate() {
             type="text"
           />
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="bg-blue-50 border border-blue-200 p-3">
             <p className="text-sm text-blue-800">
               <strong>Sample Staff IDs:</strong> STAFF001, STAFF002, STAFF003,
               STAFF004, STAFF005

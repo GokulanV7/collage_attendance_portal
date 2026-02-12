@@ -165,11 +165,11 @@ export default function TeacherMarkAttendance() {
       {/* Student List */}
       <div className="space-y-3 mb-4">
         {students.map((student) => (
-          <Card key={student.id} className="hover:shadow-md transition-shadow">
+          <Card key={student.id}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h3 className="font-medium text-gray-900">{student.name}</h3>
-                <p className="text-sm text-gray-500">{student.rollNo}</p>
+                <h3 className="text-sm font-medium text-slate-700">{student.name}</h3>
+                <p className="font-mono text-xs text-slate-500">{student.rollNo}</p>
               </div>
               <RadioGroup
                 value={attendanceMap.get(student.id) || "Present"}
@@ -182,7 +182,7 @@ export default function TeacherMarkAttendance() {
       </div>
 
       {/* Submit Button */}
-      <div className="sticky bottom-0 bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-lg">
+      <div className="sticky bottom-0 bg-gray-50 p-4">
         <div className="flex gap-3">
           <Button
             onClick={() => router.back()}

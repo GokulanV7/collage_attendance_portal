@@ -76,7 +76,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white rounded-lg shadow">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white shadow border border-gray-300">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Date
@@ -84,7 +84,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-primary-500"
           >
             <option value="">All Dates</option>
             {uniqueDates.map((date) => (
@@ -102,7 +102,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
           <select
             value={periodFilter}
             onChange={(e) => setPeriodFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-primary-500"
           >
             <option value="">All Periods</option>
             {allPeriods.map((period) => (
@@ -120,7 +120,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
           <select
             value={classFilter}
             onChange={(e) => setClassFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-primary-500"
           >
             <option value="">All Classes</option>
             {uniqueClasses.map((cls) => (
@@ -138,7 +138,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
           <select
             value={staffFilter}
             onChange={(e) => setStaffFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-primary-500"
           >
             <option value="">All Staff</option>
             {uniqueStaff.map((staff) => (
@@ -155,12 +155,12 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
         Showing <strong>{filteredRows.length}</strong> records
       </div>
 
-      {/* Google Sheets / Excel Web View Style Table */}
-      <div className="bg-white rounded-lg shadow-xl overflow-hidden border-2 border-gray-400">
+      {/* Table */}
+      <div className="bg-white overflow-hidden border border-gray-300">
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse" style={{ borderSpacing: 0 }}>
             <thead>
-              <tr className="bg-gradient-to-b from-gray-100 to-gray-200 sticky top-0 shadow-sm">
+              <tr className="bg-gray-100 sticky top-0">
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[120px]">
                   DATE
                 </th>
@@ -197,12 +197,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
               {filteredRows.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="px-6 py-12 text-center text-gray-500 border-r border-b border-gray-300">
-                    <div className="flex flex-col items-center gap-3">
-                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <p className="text-lg font-medium">No attendance records found</p>
-                    </div>
+                    <p className="text-base">No attendance records found</p>
                   </td>
                 </tr>
               ) : (
@@ -211,38 +206,38 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
                     key={index} 
                     className={`${
                       index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                    } hover:bg-blue-100 transition-all duration-150 cursor-pointer`}
+                    }`}
                   >
-                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap border-r border-b border-gray-300">
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap border-r border-b border-gray-300">
                       {row.date}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm text-slate-700 whitespace-nowrap border-r border-b border-gray-300">
                       {row.batch}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm text-slate-700 border-r border-b border-gray-300">
                       {row.department}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap border-r border-b border-gray-300 text-center font-bold text-lg">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-b border-gray-300 text-center font-bold text-lg text-slate-900">
                       {row.class}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm text-slate-700 whitespace-nowrap border-r border-b border-gray-300">
                       {row.period}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap border-r border-b border-gray-300 font-mono font-semibold">
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap border-r border-b border-gray-300">
                       {row.staffId}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-700 border-r border-b border-gray-300">
                       {row.staffName}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 whitespace-nowrap border-r border-b border-gray-300 font-mono font-semibold">
+                    <td className="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap border-r border-b border-gray-300">
                       {row.rollNo}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-700 border-r border-b border-gray-300">
                       {row.studentName}
                     </td>
                     <td className="px-6 py-4 text-sm whitespace-nowrap border-b border-gray-300 text-center">
                       <span
-                        className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide shadow-sm ${getStatusColor(
+                        className={`px-3 py-1 text-xs font-bold uppercase ${getStatusColor(
                           row.status
                         )}`}
                       >

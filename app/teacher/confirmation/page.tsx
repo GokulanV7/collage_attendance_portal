@@ -40,7 +40,7 @@ export default function TeacherConfirmation() {
       <ProgressIndicator currentStep={6} totalSteps={6} steps={steps} />
 
       <Card className="mb-4">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div className="bg-green-50 border border-green-200 p-4 mb-6">
           <p className="text-green-800 text-center font-medium">
             ✓ Attendance has been recorded successfully
           </p>
@@ -49,7 +49,7 @@ export default function TeacherConfirmation() {
         {/* Submission Details */}
         <div className="space-y-4">
           <h3 className="font-semibold text-gray-900">Submission Details</h3>
-          <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+          <div className="bg-gray-50 p-4 space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-600">Batch:</span>
               <span className="font-medium">{submission.batch}</span>
@@ -85,19 +85,19 @@ export default function TeacherConfirmation() {
         <div className="mt-6">
           <h3 className="font-semibold text-gray-900 mb-3">Summary</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-gray-100 p-4 rounded-lg text-center">
+            <div className="bg-gray-100 p-4 text-center">
               <p className="text-sm text-gray-600">Total</p>
               <p className="text-2xl font-bold text-gray-900">{submission.attendance.length}</p>
             </div>
-            <div className="bg-green-100 p-4 rounded-lg text-center">
+            <div className="bg-green-100 p-4 text-center">
               <p className="text-sm text-gray-600">Present</p>
               <p className="text-2xl font-bold text-green-700">{presentCount}</p>
             </div>
-            <div className="bg-red-100 p-4 rounded-lg text-center">
+            <div className="bg-red-100 p-4 text-center">
               <p className="text-sm text-gray-600">Absent</p>
               <p className="text-2xl font-bold text-red-700">{absentCount}</p>
             </div>
-            <div className="bg-blue-100 p-4 rounded-lg text-center">
+            <div className="bg-blue-100 p-4 text-center">
               <p className="text-sm text-gray-600">On-Duty</p>
               <p className="text-2xl font-bold text-blue-700">{onDutyCount}</p>
             </div>
@@ -108,7 +108,7 @@ export default function TeacherConfirmation() {
         {absentStudents.length > 0 && (
           <div className="mt-6">
             <h3 className="font-semibold text-gray-900 mb-3">Absent Students</h3>
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
+            <div className="bg-red-50 border border-red-200 p-4 space-y-2">
               {absentStudents.map(student => (
                 <div key={student.studentId} className="flex justify-between text-sm">
                   <span className="font-medium">{student.studentName}</span>

@@ -59,7 +59,7 @@ export default function TeacherBatch() {
             error={error}
           />
 
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-gray-50 p-4">
             <p className="text-sm text-gray-700">
               <strong>Note:</strong> Select the academic batch for which you
               want to mark attendance.

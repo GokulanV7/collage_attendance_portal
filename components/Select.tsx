@@ -28,7 +28,7 @@ export const Select: React.FC<SelectProps> = ({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all ${
+        className={`w-full px-4 py-3 border focus:outline-none focus:border-primary-500 ${
           error ? "border-red-500" : "border-gray-300"
         } bg-white text-base`}
         required={required}

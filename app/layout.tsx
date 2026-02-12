@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Attendance Portal",
   description: "College Attendance Management System",
+  icons: {
+    icon: "/College Logo.png",
+  },
 };
 
 export default function RootLayout({

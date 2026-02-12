@@ -17,7 +17,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   backHref = "/",
 }) => {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-6 lg:p-8">
+    <main className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -25,27 +25,14 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             <div className="mb-4">
               <Link
                 href={backHref}
-                className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium"
+                className="text-primary-600 hover:text-primary-700 font-medium"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                  />
-                </svg>
-                Back
+                ← Back
               </Link>
             </div>
           )}
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{title}</h1>
-          {subtitle && <p className="text-gray-600">{subtitle}</p>}
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">{title}</h1>
+          {subtitle && <p className="text-slate-600">{subtitle}</p>}
         </div>
 
         {/* Content */}

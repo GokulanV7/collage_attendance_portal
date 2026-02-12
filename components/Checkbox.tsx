@@ -20,11 +20,11 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           type="checkbox"
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
-          className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-2 focus:ring-primary-500 cursor-pointer"
+          className="w-5 h-5 text-primary-600 border-gray-300 focus:outline-none cursor-pointer"
         />
       </div>
       <div className="flex-1">
-        <p className="font-medium text-gray-900 group-hover:text-primary-600 transition-colors">
+        <p className="font-medium text-gray-900">
           {label}
         </p>
         {description && (

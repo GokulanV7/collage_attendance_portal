@@ -15,10 +15,10 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
     <div className="w-full mb-6">
       {/* Progress bar */}
       <div className="relative">
-        <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+        <div className="overflow-hidden h-2 mb-4 text-xs flex bg-gray-200">
           <div
             style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-            className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary-600 transition-all duration-300"
+            className="flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary-600"
           ></div>
         </div>
       </div>
@@ -33,11 +33,11 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
           return (
             <div key={index} className="flex flex-col items-center flex-1">
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
+                className={`w-8 h-8 flex items-center justify-center text-sm font-medium ${
                   isCompleted
                     ? "bg-primary-600 text-white"
                     : isCurrent
-                    ? "bg-primary-600 text-white ring-4 ring-primary-200"
+                    ? "bg-primary-600 text-white border-2 border-primary-300"
                     : "bg-gray-200 text-gray-500"
                 }`}
               >
