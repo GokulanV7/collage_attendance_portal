@@ -58,38 +58,38 @@ export default function AdminView() {
     >
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <Card className="bg-primary-50">
+        <Card className="bg-brand-primarySoft border border-brand-primary/40">
           <div className="text-center">
-            <p className="text-sm text-primary-700 font-medium">
+            <p className="text-sm text-brand-secondary font-medium">
               Total Submissions
             </p>
-            <p className="text-3xl font-bold text-primary-900">
+            <p className="text-3xl font-bold text-brand-secondary">
               {submissions.length}
             </p>
           </div>
         </Card>
-        <Card className="bg-gray-50">
+        <Card className="bg-brand-background border border-neutral-border">
           <div className="text-center">
-            <p className="text-sm text-gray-700 font-medium">Total Records</p>
-            <p className="text-3xl font-bold text-gray-900">{totalRecords}</p>
+            <p className="text-sm text-neutral-secondary font-medium">Total Records</p>
+            <p className="text-3xl font-bold text-neutral-primary">{totalRecords}</p>
           </div>
         </Card>
-        <Card className="bg-green-50">
+        <Card className="bg-status-successSoft border border-status-success/60">
           <div className="text-center">
-            <p className="text-sm text-green-700 font-medium">Present</p>
-            <p className="text-3xl font-bold text-green-900">{presentCount}</p>
+            <p className="text-sm text-status-successStrong font-medium">Present</p>
+            <p className="text-3xl font-bold text-status-successStrong">{presentCount}</p>
           </div>
         </Card>
-        <Card className="bg-red-50">
+        <Card className="bg-status-dangerSoft border border-status-danger/60">
           <div className="text-center">
-            <p className="text-sm text-red-700 font-medium">Absent</p>
-            <p className="text-3xl font-bold text-red-900">{absentCount}</p>
+            <p className="text-sm text-status-dangerStrong font-medium">Absent</p>
+            <p className="text-3xl font-bold text-status-dangerStrong">{absentCount}</p>
           </div>
         </Card>
-        <Card className="bg-blue-50">
+        <Card className="bg-status-infoSoft border border-status-info/60">
           <div className="text-center">
-            <p className="text-sm text-blue-700 font-medium">On-Duty</p>
-            <p className="text-3xl font-bold text-blue-900">{onDutyCount}</p>
+            <p className="text-sm text-status-infoStrong font-medium">On-Duty</p>
+            <p className="text-3xl font-bold text-status-infoStrong">{onDutyCount}</p>
           </div>
         </Card>
       </div>
@@ -98,15 +98,15 @@ export default function AdminView() {
       {submissions.length === 0 ? (
         <Card>
           <div className="text-center py-12">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-neutral-primary mb-2">
               No Attendance Records Yet
             </h3>
-            <p className="text-gray-600 mb-6">
-              Teachers haven't submitted any attendance yet. Records will appear
+            <p className="text-neutral-secondary mb-6">
+              Staff haven't submitted any attendance yet. Records will appear
               here once submitted.
             </p>
-            <Link href="/teacher/validate">
-              <Button>Go to Teacher Portal</Button>
+            <Link href="/staff/validate">
+              <Button>Go to Staff Portal</Button>
             </Link>
           </div>
         </Card>

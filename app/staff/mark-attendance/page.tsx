@@ -12,7 +12,7 @@ import { getPeriods } from "@/data/mockStaffAndPeriods";
 import { useAttendance } from "@/context/AttendanceContext";
 import { Student, AttendanceStatus, AttendanceSubmission } from "@/types";
 
-export default function TeacherMarkAttendance() {
+export default function StaffMarkAttendance() {
   const router = useRouter();
   const { addSubmission } = useAttendance();
   const [students, setStudents] = useState<Student[]>([]);
@@ -35,7 +35,7 @@ export default function TeacherMarkAttendance() {
     const periodsStr = sessionStorage.getItem("selectedPeriods");
 
     if (!staffId || !batch || !dept || !classId || !periodsStr) {
-      router.push("/teacher/validate");
+      router.push("/staff/validate");
       return;
     }
 
@@ -107,7 +107,7 @@ export default function TeacherMarkAttendance() {
     sessionStorage.setItem("lastSubmission", JSON.stringify(submission));
 
     // Navigate to confirmation
-    router.push("/teacher/confirmation");
+    router.push("/staff/confirmation");
   };
 
   const presentCount = Array.from(attendanceMap.values()).filter(s => s === "Present").length;
@@ -119,7 +119,7 @@ export default function TeacherMarkAttendance() {
       title="Mark Attendance"
       subtitle="Set attendance status for each student"
       showBackButton
-      backHref="/teacher/class-period"
+      backHref="/staff/class-period"
     >
       <ProgressIndicator currentStep={5} totalSteps={6} steps={steps} />
 
@@ -127,20 +127,20 @@ export default function TeacherMarkAttendance() {
       <Card className="mb-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center">
-            <p className="text-sm text-gray-600">Total</p>
-            <p className="text-2xl font-bold text-gray-900">{students.length}</p>
+            <p className="text-sm text-neutral-secondary">Total</p>
+            <p className="text-2xl font-bold text-neutral-primary">{students.length}</p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-gray-600">Present</p>
-            <p className="text-2xl font-bold text-green-600">{presentCount}</p>
+            <p className="text-sm text-neutral-secondary">Present</p>
+            <p className="text-2xl font-bold text-status-success">{presentCount}</p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-gray-600">Absent</p>
-            <p className="text-2xl font-bold text-red-600">{absentCount}</p>
+            <p className="text-sm text-neutral-secondary">Absent</p>
+            <p className="text-2xl font-bold text-status-danger">{absentCount}</p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-gray-600">On-Duty</p>
-            <p className="text-2xl font-bold text-blue-600">{onDutyCount}</p>
+            <p className="text-sm text-neutral-secondary">On-Duty</p>
+            <p className="text-2xl font-bold text-status-info">{onDutyCount}</p>
           </div>
         </div>
 
@@ -168,8 +168,8 @@ export default function TeacherMarkAttendance() {
           <Card key={student.id}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h3 className="text-sm font-medium text-slate-700">{student.name}</h3>
-                <p className="font-mono text-xs text-slate-500">{student.rollNo}</p>
+                <h3 className="text-sm font-medium text-neutral-primary">{student.name}</h3>
+                <p className="font-mono text-xs text-neutral-muted">{student.rollNo}</p>
               </div>
               <RadioGroup
                 value={attendanceMap.get(student.id) || "Present"}
@@ -182,7 +182,7 @@ export default function TeacherMarkAttendance() {
       </div>
 
       {/* Submit Button */}
-      <div className="sticky bottom-0 bg-gray-50 p-4">
+      <div className="sticky bottom-0 bg-brand-background p-4 border-t border-neutral-border">
         <div className="flex gap-3">
           <Button
             onClick={() => router.back()}

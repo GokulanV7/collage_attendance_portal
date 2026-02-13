@@ -1,10 +1,38 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { PageLayout } from "@/components/PageLayout";
+import React, { useEffect, useState } from "react";
 import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
+import { Select } from "@/components/Select";
+import { Input } from "@/components/Input";
+import { StudentRow } from "@/components/StudentRow";
+import { Student } from "@/types";
+import {
+  getBatches,
+  getDepartments,
+  getClassesByDepartment,
+  getStudentsByClass,
+} from "@/data/mockDatabase";
+
+type Step = "selection" | "attendance" | "confirmation";
+
+interface LegacyAttendanceRecord {
+  studentId: string;
+  studentName: string;
+  rollNo: string;
+  isPresent: boolean;
+}
+
+interface LegacyAttendanceSubmission {
+  batch: string;
+  department: string;
+  class: string;
+  date: string;
+  time: string;
+  staffId: string;
+  staffName: string;
+  attendance: LegacyAttendanceRecord[];
+}
 
 export default function Home() {
   // Step management
@@ -26,7 +54,7 @@ export default function Home() {
   const [staffName, setStaffName] = useState("");
 
   // Submission state
-  const [submittedData, setSubmittedData] = useState<AttendanceSubmission | null>(
+  const [submittedData, setSubmittedData] = useState<LegacyAttendanceSubmission | null>(
     null
   );
 
@@ -128,7 +156,7 @@ export default function Home() {
     }
 
     // Prepare attendance records
-    const attendanceRecords: AttendanceRecord[] = students.map((student) => ({
+    const attendanceRecords: LegacyAttendanceRecord[] = students.map((student) => ({
       studentId: student.id,
       studentName: student.name,
       rollNo: student.rollNo,
@@ -143,7 +171,7 @@ export default function Home() {
 
     // Create submission object
     const now = new Date();
-    const submission: AttendanceSubmission = {
+    const submission: LegacyAttendanceSubmission = {
       batch: batchName,
       department: departmentName,
       class: className,
@@ -186,7 +214,21 @@ export default function Home() {
 
   // Render selection step
   const renderSelectionStep = () => (
-    <Card title="Mark Attendance">
+    <Card
+      className="bg-brand-primaryLight border-brand-secondary/30 text-brand-secondary shadow-[0_35px_120px_rgba(46,125,50,0.18)]"
+    >
+      <div className="mb-4 text-center sm:text-left">
+        <p className="text-xs uppercase tracking-[0.4em] text-brand-secondary/80">
+          Quick Setup
+        </p>
+        <h2 className="text-2xl font-bold text-brand-secondary mt-2">
+          Mark Attendance
+        </h2>
+        <p className="text-sm text-brand-secondary/80">
+          Choose batch, department, and class to get started
+        </p>
+      </div>
+
       <div className="space-y-4">
         <Select
           label="Batch"
@@ -240,12 +282,12 @@ export default function Home() {
 
     return (
       <div className="space-y-4">
-        <Card>
+        <Card className="bg-brand-primaryLight border-brand-secondary/30 text-brand-secondary shadow-[0_35px_120px_rgba(46,125,50,0.18)]">
           <div className="mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-brand-secondary">
               Mark Attendance
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-brand-secondary/80 mt-1">
               {batches.find((b) => b.id === selectedBatch)?.name} •{" "}
               {departments.find((d) => d.id === selectedDepartment)?.name} •
               Class {availableClasses.find((c) => c.id === selectedClass)?.name}
@@ -269,22 +311,22 @@ export default function Home() {
             </Button>
           </div>
 
-          <div className="bg-gray-100 p-3 rounded-lg mb-4 flex justify-around">
+          <div className="bg-brand-background border border-brand-secondary/30 p-4 rounded-2xl mb-4 flex justify-around">
             <div className="text-center">
-              <p className="text-sm text-gray-600">Total Students</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm text-brand-secondary/80">Total Students</p>
+              <p className="text-2xl font-bold text-brand-secondary">
                 {students.length}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-gray-600">Present</p>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-sm text-brand-secondary/80">Present</p>
+              <p className="text-2xl font-bold text-status-success">
                 {presentCount}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-sm text-gray-600">Absent</p>
-              <p className="text-2xl font-bold text-red-600">{absentCount}</p>
+              <p className="text-sm text-brand-secondary/80">Absent</p>
+              <p className="text-2xl font-bold text-status-danger">{absentCount}</p>
             </div>
           </div>
         </Card>
@@ -300,7 +342,13 @@ export default function Home() {
           ))}
         </div>
 
-        <Card title="Staff Details">
+        <Card className="bg-brand-primaryLight border-brand-secondary/30 text-brand-secondary shadow-[0_35px_120px_rgba(46,125,50,0.18)]">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-brand-secondary">Staff Details</h2>
+            <p className="text-sm text-brand-secondary/80">
+              Identify yourself for submission records
+            </p>
+          </div>
           <div className="space-y-4">
             <Input
               label="Staff ID"
@@ -321,7 +369,7 @@ export default function Home() {
           </div>
         </Card>
 
-        <div className="sticky bottom-0 bg-gray-50 p-4 rounded-lg flex gap-3">
+        <div className="sticky bottom-0 bg-brand-primarySoft border border-brand-secondary/30 p-4 rounded-2xl flex gap-3 shadow-lg">
           <Button onClick={handleReset} variant="secondary" className="flex-1">
             Cancel
           </Button>
@@ -341,66 +389,74 @@ export default function Home() {
     const absentStudents = submittedData.attendance.filter((a) => !a.isPresent);
 
     return (
-      <Card title="Attendance Submitted Successfully">
+      <Card className="bg-brand-primaryLight border-brand-secondary/30 text-brand-secondary shadow-[0_35px_120px_rgba(46,125,50,0.18)]">
+        <div className="mb-4 text-center">
+          <p className="text-xs uppercase tracking-[0.4em] text-brand-secondary/80">
+            Success
+          </p>
+          <h2 className="text-2xl font-bold text-brand-secondary mt-2">
+            Attendance Submitted Successfully
+          </h2>
+        </div>
         <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-green-800 text-center font-medium">
+          <div className="bg-status-successSoft border border-status-success rounded-2xl p-4">
+            <p className="text-status-successStrong text-center font-medium">
               ✓ Attendance has been recorded successfully
             </p>
           </div>
 
           <div className="space-y-3">
-            <h3 className="font-semibold text-gray-900">Submission Details</h3>
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
+            <h3 className="font-semibold text-brand-secondary">Submission Details</h3>
+            <div className="bg-brand-background p-4 rounded-2xl space-y-2 text-sm border border-brand-secondary/20">
               <div className="flex justify-between">
-                <span className="text-gray-600">Batch:</span>
+                <span className="text-brand-secondary/80">Batch:</span>
                 <span className="font-medium">{submittedData.batch}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Department:</span>
+                <span className="text-brand-secondary/80">Department:</span>
                 <span className="font-medium">{submittedData.department}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Class:</span>
+                <span className="text-brand-secondary/80">Class:</span>
                 <span className="font-medium">{submittedData.class}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Date:</span>
+                <span className="text-brand-secondary/80">Date:</span>
                 <span className="font-medium">{submittedData.date}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Time:</span>
+                <span className="text-brand-secondary/80">Time:</span>
                 <span className="font-medium">{submittedData.time}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Staff ID:</span>
+                <span className="text-brand-secondary/80">Staff ID:</span>
                 <span className="font-medium">{submittedData.staffId}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Staff Name:</span>
+                <span className="text-brand-secondary/80">Staff Name:</span>
                 <span className="font-medium">{submittedData.staffName}</span>
               </div>
             </div>
           </div>
 
           <div className="space-y-3">
-            <h3 className="font-semibold text-gray-900">Summary</h3>
+            <h3 className="font-semibold text-brand-secondary">Summary</h3>
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-gray-100 p-4 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Total</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div className="bg-brand-background p-4 rounded-2xl text-center border border-brand-secondary/20">
+                <p className="text-sm text-brand-secondary/80">Total</p>
+                <p className="text-2xl font-bold text-brand-secondary">
                   {submittedData.attendance.length}
                 </p>
               </div>
-              <div className="bg-green-100 p-4 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Present</p>
-                <p className="text-2xl font-bold text-green-700">
+              <div className="bg-status-successSoft p-4 rounded-2xl text-center border border-status-success/60">
+                <p className="text-sm text-status-successStrong/80">Present</p>
+                <p className="text-2xl font-bold text-status-successStrong">
                   {presentStudents.length}
                 </p>
               </div>
-              <div className="bg-red-100 p-4 rounded-lg text-center">
-                <p className="text-sm text-gray-600">Absent</p>
-                <p className="text-2xl font-bold text-red-700">
+              <div className="bg-status-dangerSoft p-4 rounded-2xl text-center border border-status-danger/60">
+                <p className="text-sm text-status-dangerStrong/80">Absent</p>
+                <p className="text-2xl font-bold text-status-dangerStrong">
                   {absentStudents.length}
                 </p>
               </div>
@@ -409,15 +465,15 @@ export default function Home() {
 
           {absentStudents.length > 0 && (
             <div className="space-y-3">
-              <h3 className="font-semibold text-gray-900">Absent Students</h3>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
+              <h3 className="font-semibold text-brand-secondary">Absent Students</h3>
+              <div className="bg-status-dangerSoft border border-status-danger rounded-2xl p-4 space-y-2">
                 {absentStudents.map((student) => (
                   <div
                     key={student.studentId}
-                    className="flex justify-between text-sm"
+                    className="flex justify-between text-sm text-status-dangerStrong"
                   >
                     <span className="font-medium">{student.studentName}</span>
-                    <span className="text-gray-600">{student.rollNo}</span>
+                    <span className="text-status-dangerStrong/80">{student.rollNo}</span>
                   </div>
                 ))}
               </div>
@@ -433,13 +489,15 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <main className="min-h-screen bg-brand-primary flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-5xl space-y-8">
+        <div className="text-center mb-4 bg-brand-primaryLight border border-brand-secondary/30 rounded-3xl p-8 shadow-[0_35px_120px_rgba(46,125,50,0.18)]">
+          <h1 className="text-3xl font-bold text-brand-secondary mb-2">
             Attendance Portal
           </h1>
-          <p className="text-gray-600">College Attendance Management System</p>
+          <p className="text-brand-secondary/80">
+            College Attendance Management System
+          </p>
         </div>
 
         {currentStep === "selection" && renderSelectionStep()}

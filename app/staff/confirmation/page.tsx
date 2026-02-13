@@ -9,7 +9,7 @@ import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { AttendanceSubmission } from "@/types";
 import { getPeriods } from "@/data/mockStaffAndPeriods";
 
-export default function TeacherConfirmation() {
+export default function StaffConfirmation() {
   const [submission, setSubmission] = useState<AttendanceSubmission | null>(null);
   const steps = ["Staff ID", "Batch", "Department", "Class & Period", "Mark", "Confirm"];
 
@@ -40,42 +40,42 @@ export default function TeacherConfirmation() {
       <ProgressIndicator currentStep={6} totalSteps={6} steps={steps} />
 
       <Card className="mb-4">
-        <div className="bg-green-50 border border-green-200 p-4 mb-6">
-          <p className="text-green-800 text-center font-medium">
+        <div className="bg-status-successSoft border border-status-success p-4 mb-6 rounded-2xl">
+          <p className="text-status-successStrong text-center font-medium">
             ✓ Attendance has been recorded successfully
           </p>
         </div>
 
         {/* Submission Details */}
         <div className="space-y-4">
-          <h3 className="font-semibold text-gray-900">Submission Details</h3>
-          <div className="bg-gray-50 p-4 space-y-2 text-sm">
+          <h3 className="font-semibold text-neutral-primary">Submission Details</h3>
+          <div className="bg-brand-background p-4 space-y-2 text-sm rounded-2xl">
             <div className="flex justify-between">
-              <span className="text-gray-600">Batch:</span>
+              <span className="text-neutral-secondary">Batch:</span>
               <span className="font-medium">{submission.batch}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Department:</span>
+              <span className="text-neutral-secondary">Department:</span>
               <span className="font-medium">{submission.department}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Class:</span>
+              <span className="text-neutral-secondary">Class:</span>
               <span className="font-medium">{submission.class}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Period(s):</span>
+              <span className="text-neutral-secondary">Period(s):</span>
               <span className="font-medium">{periodNames}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Date:</span>
+              <span className="text-neutral-secondary">Date:</span>
               <span className="font-medium">{submission.date}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Time:</span>
+              <span className="text-neutral-secondary">Time:</span>
               <span className="font-medium">{submission.time}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Staff:</span>
+              <span className="text-neutral-secondary">Staff:</span>
               <span className="font-medium">{submission.staffName} ({submission.staffId})</span>
             </div>
           </div>
@@ -83,23 +83,23 @@ export default function TeacherConfirmation() {
 
         {/* Summary Stats */}
         <div className="mt-6">
-          <h3 className="font-semibold text-gray-900 mb-3">Summary</h3>
+          <h3 className="font-semibold text-neutral-primary mb-3">Summary</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-gray-100 p-4 text-center">
-              <p className="text-sm text-gray-600">Total</p>
-              <p className="text-2xl font-bold text-gray-900">{submission.attendance.length}</p>
+            <div className="bg-brand-background p-4 text-center rounded-2xl border border-neutral-border/60">
+              <p className="text-sm text-neutral-secondary">Total</p>
+              <p className="text-2xl font-bold text-neutral-primary">{submission.attendance.length}</p>
             </div>
-            <div className="bg-green-100 p-4 text-center">
-              <p className="text-sm text-gray-600">Present</p>
-              <p className="text-2xl font-bold text-green-700">{presentCount}</p>
+            <div className="bg-status-successSoft p-4 text-center rounded-2xl border border-status-success/60">
+              <p className="text-sm text-status-successStrong/80">Present</p>
+              <p className="text-2xl font-bold text-status-successStrong">{presentCount}</p>
             </div>
-            <div className="bg-red-100 p-4 text-center">
-              <p className="text-sm text-gray-600">Absent</p>
-              <p className="text-2xl font-bold text-red-700">{absentCount}</p>
+            <div className="bg-status-dangerSoft p-4 text-center rounded-2xl border border-status-danger/60">
+              <p className="text-sm text-status-dangerStrong/80">Absent</p>
+              <p className="text-2xl font-bold text-status-dangerStrong">{absentCount}</p>
             </div>
-            <div className="bg-blue-100 p-4 text-center">
-              <p className="text-sm text-gray-600">On-Duty</p>
-              <p className="text-2xl font-bold text-blue-700">{onDutyCount}</p>
+            <div className="bg-status-infoSoft p-4 text-center rounded-2xl border border-status-info/60">
+              <p className="text-sm text-status-infoStrong/80">On-Duty</p>
+              <p className="text-2xl font-bold text-status-infoStrong">{onDutyCount}</p>
             </div>
           </div>
         </div>
@@ -107,12 +107,12 @@ export default function TeacherConfirmation() {
         {/* Absent Students */}
         {absentStudents.length > 0 && (
           <div className="mt-6">
-            <h3 className="font-semibold text-gray-900 mb-3">Absent Students</h3>
-            <div className="bg-red-50 border border-red-200 p-4 space-y-2">
+            <h3 className="font-semibold text-neutral-primary mb-3">Absent Students</h3>
+            <div className="bg-status-dangerSoft border border-status-danger p-4 space-y-2 rounded-2xl">
               {absentStudents.map(student => (
-                <div key={student.studentId} className="flex justify-between text-sm">
+                <div key={student.studentId} className="flex justify-between text-sm text-status-dangerStrong">
                   <span className="font-medium">{student.studentName}</span>
-                  <span className="text-gray-600">{student.rollNo}</span>
+                  <span className="text-status-dangerStrong/80">{student.rollNo}</span>
                 </div>
               ))}
             </div>
@@ -121,7 +121,7 @@ export default function TeacherConfirmation() {
 
         {/* Actions */}
         <div className="mt-8 flex gap-3">
-          <Link href="/teacher/validate" className="flex-1">
+          <Link href="/staff/validate" className="flex-1">
             <Button fullWidth>Mark New Attendance</Button>
           </Link>
           <Link href="/" className="flex-1">

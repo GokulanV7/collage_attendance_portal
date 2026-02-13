@@ -1,4 +1,5 @@
 import React from "react";
+import { appTheme } from "@/styles/theme";
 
 interface CheckboxProps {
   label: string;
@@ -20,15 +21,16 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           type="checkbox"
           checked={checked}
           onChange={(e) => onChange(e.target.checked)}
-          className="w-5 h-5 text-primary-600 border-gray-300 focus:outline-none cursor-pointer"
+          style={{ accentColor: appTheme.brand.secondary }}
+          className="w-5 h-5 text-brand-secondary border-neutral-border focus:outline-none cursor-pointer rounded"
         />
       </div>
       <div className="flex-1">
-        <p className="font-medium text-gray-900">
+        <p className="font-medium text-neutral-primary">
           {label}
         </p>
         {description && (
-          <p className="text-sm text-gray-500 mt-1">{description}</p>
+          <p className="text-sm text-neutral-muted mt-1">{description}</p>
         )}
       </div>
     </label>

@@ -20,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body
+        className={`${inter.className} bg-brand-primaryLight text-neutral-primary min-h-screen`}
+      >
         <AttendanceProvider>{children}</AttendanceProvider>
       </body>
     </html>

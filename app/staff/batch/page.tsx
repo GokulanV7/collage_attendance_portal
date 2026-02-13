@@ -9,7 +9,7 @@ import { Button } from "@/components/Button";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { getBatches } from "@/data/mockDatabase";
 
-export default function TeacherBatch() {
+export default function StaffBatch() {
   const router = useRouter();
   const [staffName, setStaffName] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
@@ -22,7 +22,7 @@ export default function TeacherBatch() {
     // Check if staff is validated
     const name = sessionStorage.getItem("staffName");
     if (!name) {
-      router.push("/teacher/validate");
+      router.push("/staff/validate");
       return;
     }
     setStaffName(name);
@@ -35,7 +35,7 @@ export default function TeacherBatch() {
     }
 
     sessionStorage.setItem("selectedBatch", selectedBatch);
-    router.push("/teacher/department");
+    router.push("/staff/department");
   };
 
   return (
@@ -43,7 +43,7 @@ export default function TeacherBatch() {
       title="Select Batch"
       subtitle={`Welcome, ${staffName}`}
       showBackButton
-      backHref="/teacher/validate"
+      backHref="/staff/validate"
     >
       <ProgressIndicator currentStep={2} totalSteps={6} steps={steps} />
 
@@ -59,8 +59,8 @@ export default function TeacherBatch() {
             error={error}
           />
 
-          <div className="bg-gray-50 p-4">
-            <p className="text-sm text-gray-700">
+          <div className="bg-pastel-blue p-4 rounded-2xl border border-neutral-border/60">
+            <p className="text-sm text-neutral-secondary">
               <strong>Note:</strong> Select the academic batch for which you
               want to mark attendance.
             </p>

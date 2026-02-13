@@ -1,4 +1,5 @@
 import React from "react";
+import { appTheme } from "@/styles/theme";
 
 interface InputProps {
   label: string;
@@ -21,9 +22,9 @@ export const Input: React.FC<InputProps> = ({
 }) => {
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-neutral-secondary mb-2">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-status-danger ml-1">*</span>}
       </label>
       <input
         type={type}
@@ -31,11 +32,12 @@ export const Input: React.FC<InputProps> = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
-        className={`w-full px-4 py-3 border focus:outline-none focus:border-primary-500 ${
-          error ? "border-red-500" : "border-gray-300"
+        style={{ caretColor: appTheme.brand.secondary }}
+        className={`w-full px-4 py-3 border rounded-xl bg-brand-surface text-neutral-primary placeholder:text-neutral-muted focus:outline-none focus:ring-2 focus:ring-brand-secondary focus:border-brand-secondary transition ${
+          error ? "border-status-danger text-status-danger" : "border-neutral-border"
         } text-base`}
       />
-      {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
+      {error && <p className="mt-1 text-sm text-status-danger">{error}</p>}
     </div>
   );
 };

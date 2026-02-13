@@ -63,28 +63,28 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Present":
-        return "bg-green-100 text-green-800";
+        return "bg-status-successSoft text-status-successStrong";
       case "Absent":
-        return "bg-red-100 text-red-800";
+        return "bg-status-dangerSoft text-status-dangerStrong";
       case "On-Duty":
-        return "bg-blue-100 text-blue-800";
+        return "bg-status-infoSoft text-status-infoStrong";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-pastel-blue text-neutral-secondary";
     }
   };
 
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-white shadow border border-gray-300">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-brand-surface shadow-sm border border-neutral-border rounded-2xl">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-neutral-secondary mb-1">
             Date
           </label>
           <select
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-primary-500"
+            className="w-full px-3 py-2 border border-neutral-border rounded-xl bg-brand-surface text-neutral-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary"
           >
             <option value="">All Dates</option>
             {uniqueDates.map((date) => (
@@ -96,13 +96,13 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-neutral-secondary mb-1">
             Period
           </label>
           <select
             value={periodFilter}
             onChange={(e) => setPeriodFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-primary-500"
+            className="w-full px-3 py-2 border border-neutral-border rounded-xl bg-brand-surface text-neutral-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary"
           >
             <option value="">All Periods</option>
             {allPeriods.map((period) => (
@@ -114,13 +114,13 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-neutral-secondary mb-1">
             Class
           </label>
           <select
             value={classFilter}
             onChange={(e) => setClassFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-primary-500"
+            className="w-full px-3 py-2 border border-neutral-border rounded-xl bg-brand-surface text-neutral-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary"
           >
             <option value="">All Classes</option>
             {uniqueClasses.map((cls) => (
@@ -132,13 +132,13 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-neutral-secondary mb-1">
             Staff ID
           </label>
           <select
             value={staffFilter}
             onChange={(e) => setStaffFilter(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-primary-500"
+            className="w-full px-3 py-2 border border-neutral-border rounded-xl bg-brand-surface text-neutral-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary"
           >
             <option value="">All Staff</option>
             {uniqueStaff.map((staff) => (
@@ -151,44 +151,44 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
       </div>
 
       {/* Results Count */}
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-neutral-secondary">
         Showing <strong>{filteredRows.length}</strong> records
       </div>
 
       {/* Table */}
-      <div className="bg-white overflow-hidden border border-gray-300">
+      <div className="bg-brand-surface overflow-hidden border border-neutral-border rounded-2xl shadow-sm">
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse" style={{ borderSpacing: 0 }}>
             <thead>
-              <tr className="bg-gray-100 sticky top-0">
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[120px]">
+              <tr className="bg-brand-primarySoft text-brand-secondary sticky top-0">
+                <th className="px-6 py-4 text-left text-xs font-bold border-r border-b-2 border-neutral-border/70 min-w-[120px]">
                   DATE
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[120px]">
+                <th className="px-6 py-4 text-left text-xs font-bold border-r border-b-2 border-neutral-border/70 min-w-[120px]">
                   BATCH
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[200px]">
+                <th className="px-6 py-4 text-left text-xs font-bold border-r border-b-2 border-neutral-border/70 min-w-[200px]">
                   DEPARTMENT
                 </th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[80px]">
+                <th className="px-6 py-4 text-center text-xs font-bold border-r border-b-2 border-neutral-border/70 min-w-[80px]">
                   CLASS
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[100px]">
+                <th className="px-6 py-4 text-left text-xs font-bold border-r border-b-2 border-neutral-border/70 min-w-[100px]">
                   PERIOD
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[110px]">
+                <th className="px-6 py-4 text-left text-xs font-bold border-r border-b-2 border-neutral-border/70 min-w-[110px]">
                   STAFF ID
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[180px]">
+                <th className="px-6 py-4 text-left text-xs font-bold border-r border-b-2 border-neutral-border/70 min-w-[180px]">
                   STAFF NAME
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[120px]">
+                <th className="px-6 py-4 text-left text-xs font-bold border-r border-b-2 border-neutral-border/70 min-w-[120px]">
                   ROLL NO
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-800 border-r border-b-2 border-gray-400 min-w-[180px]">
+                <th className="px-6 py-4 text-left text-xs font-bold border-r border-b-2 border-neutral-border/70 min-w-[180px]">
                   STUDENT NAME
                 </th>
-                <th className="px-6 py-4 text-center text-xs font-bold text-gray-800 border-b-2 border-gray-400 min-w-[120px]">
+                <th className="px-6 py-4 text-center text-xs font-bold border-b-2 border-neutral-border/70 min-w-[120px]">
                   STATUS
                 </th>
               </tr>
@@ -196,7 +196,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
             <tbody>
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-6 py-12 text-center text-gray-500 border-r border-b border-gray-300">
+                  <td colSpan={10} className="px-6 py-12 text-center text-neutral-muted border-r border-b border-neutral-border">
                     <p className="text-base">No attendance records found</p>
                   </td>
                 </tr>
@@ -205,37 +205,37 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
                   <tr 
                     key={index} 
                     className={`${
-                      index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
+                      index % 2 === 0 ? 'bg-brand-surface' : 'bg-brand-background'
                     }`}
                   >
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap border-r border-b border-gray-300">
+                    <td className="px-6 py-4 font-mono text-xs text-neutral-muted whitespace-nowrap border-r border-b border-neutral-border">
                       {row.date}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-700 whitespace-nowrap border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm text-neutral-primary whitespace-nowrap border-r border-b border-neutral-border">
                       {row.batch}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-700 border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm text-neutral-primary border-r border-b border-neutral-border">
                       {row.department}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap border-r border-b border-gray-300 text-center font-bold text-lg text-slate-900">
+                    <td className="px-6 py-4 whitespace-nowrap border-r border-b border-neutral-border text-center font-bold text-lg text-neutral-primary">
                       {row.class}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-700 whitespace-nowrap border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm text-neutral-primary whitespace-nowrap border-r border-b border-neutral-border">
                       {row.period}
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap border-r border-b border-gray-300">
+                    <td className="px-6 py-4 font-mono text-xs text-neutral-muted whitespace-nowrap border-r border-b border-neutral-border">
                       {row.staffId}
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-700 border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm font-medium text-neutral-primary border-r border-b border-neutral-border">
                       {row.staffName}
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500 whitespace-nowrap border-r border-b border-gray-300">
+                    <td className="px-6 py-4 font-mono text-xs text-neutral-muted whitespace-nowrap border-r border-b border-neutral-border">
                       {row.rollNo}
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium text-slate-700 border-r border-b border-gray-300">
+                    <td className="px-6 py-4 text-sm font-medium text-neutral-primary border-r border-b border-neutral-border">
                       {row.studentName}
                     </td>
-                    <td className="px-6 py-4 text-sm whitespace-nowrap border-b border-gray-300 text-center">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap border-b border-neutral-border text-center">
                       <span
                         className={`px-3 py-1 text-xs font-bold uppercase ${getStatusColor(
                           row.status
