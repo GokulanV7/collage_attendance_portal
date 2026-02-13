@@ -4,45 +4,45 @@
 
 :root {
   /* Brand */
-  --color-primary: #ffd700;
-  --color-primary-light: #ffe566;
-  --color-primary-soft: #ffeca8;
-  --color-primary-surface: #fffde7;
-  --color-primary-deep: #b38d00;
-  --color-secondary: #2e7d32;
-  --color-secondary-dark: #1f5d23;
-  --color-accent: #4caf50;
+  --color-primary: #d5f000;
+  --color-primary-light: #eafe6d;
+  --color-primary-soft: #f7ffd9;
+  --color-primary-surface: #ffffff;
+  --color-primary-deep: #9db200;
+  --color-secondary: #0e8c3a;
+  --color-secondary-dark: #09612a;
+  --color-accent: #13b34a;
 
   /* Surfaces */
-  --color-background: #ffd700;
-  --color-surface: #fffde7;
+  --color-background: #f3f4f6;
+  --color-surface: #ffffff;
 
   /* Text */
-  --color-text-primary: #1f2937;
-  --color-text-secondary: #4b5563;
+  --color-text-primary: #1c1c1c;
+  --color-text-secondary: #4d4d4d;
   --color-text-muted: #9ca3af;
 
   /* Borders */
-  --color-border: #e5e7eb;
+  --color-border: #e0e0e0;
 
   /* Status */
-  --color-success: #4caf50;
-  --color-success-soft: #e6f7f0;
-  --color-danger: #f44336;
-  --color-danger-soft: #ffe8e6;
-  --color-warning: #ff9800;
-  --color-warning-soft: #fff3e0;
-  --color-info: #2196f3;
-  --color-info-soft: #e0ecff;
+  --color-success: #13b34a;
+  --color-success-soft: #e4f9ec;
+  --color-danger: #e63946;
+  --color-danger-soft: #ffe4e6;
+  --color-warning: #f4a300;
+  --color-warning-soft: #fff3d4;
+  --color-info: #1c8ad5;
+  --color-info-soft: #e1f0ff;
 
   /* Pastel badges */
-  --color-pastel-peach: #ffeed6;
-  --color-pastel-mint: #e6f7f0;
-  --color-pastel-blue: #e0ecff;
-  --color-pastel-lavender: #f5e9ff;
+  --color-pastel-peach: #fff2da;
+  --color-pastel-mint: #e8f9ed;
+  --color-pastel-blue: #e5f1ff;
+  --color-pastel-lavender: #f3ecff;
 
   /* Utility */
-  --color-spinner: #2e7d32;
+  --color-spinner: #0e8c3a;
   --color-overlay: rgba(0, 0, 0, 0.15);
 }
 
@@ -53,7 +53,7 @@ body {
 
 body {
   color: var(--color-text-primary);
-  background: var(--color-background);
+  background-color: var(--color-background);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -62,9 +62,5 @@ a {
 }
 
 .hero-surface {
-  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
-}
-
-.cta-sheen {
-  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.45), transparent 45%);
+  background: var(--color-primary);
 }

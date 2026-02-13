@@ -5,6 +5,7 @@ A comprehensive, mobile-first attendance management system with **separate Staff
 ## ✨ Features
 
 ### 🧑‍🏫 Staff Portal
+
 - **Staff Validation**: Secure authentication with Staff ID
 - **Multi-step Flow**: Guided 6-step process with progress indicator
 - **Time-based Period Selection**: Automatic detection of current teaching period
@@ -14,6 +15,7 @@ A comprehensive, mobile-first attendance management system with **separate Staff
 - **Comprehensive Confirmation**: Detailed submission summary
 
 ### 👨‍💼 Admin Portal
+
 - **Secure Access**: Admin code authentication
 - **Excel-style Table**: Professional spreadsheet-like data view
 - **Advanced Filtering**: Filter by Date, Period, Class, Staff ID
@@ -23,6 +25,7 @@ A comprehensive, mobile-first attendance management system with **separate Staff
 - **Empty State Handling**: Helpful guidance when no data exists
 
 ### 🎯 Core Features
+
 - **Mobile-First Design**: Touch-friendly UI optimized for tablets and phones
 - **Progress Indicators**: Visual step-by-step guidance
 - **Form Validation**: Inline error messages and required field checks
@@ -86,11 +89,13 @@ Collage_attendance_Portal/
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ and npm/yarn/pnpm
 
 ### Installation
 
 1. **Install dependencies**:
+
 ```bash
 npm install
 # or
@@ -98,12 +103,13 @@ yarn install
 ```
 
 2. **Run development server**:
+
 ```bash
 npm run dev
 ```
 
 3. **Open browser**:
-Navigate to [http://localhost:3000](http://localhost:3000)
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 📱 Usage Guide
 
@@ -177,6 +183,7 @@ Period 8: 16:10 - 17:00
 ### Three Attendance States
 
 Unlike traditional Present/Absent, we support:
+
 - **Present**: Student is in class
 - **Absent**: Student is not in class
 - **On-Duty**: Student is on official college duty (sports, events, etc.)
@@ -184,6 +191,7 @@ Unlike traditional Present/Absent, we support:
 ### Excel-Style Admin Table
 
 Features:
+
 - **10 columns**: Date, Batch, Dept, Class, Period, Staff ID, Staff Name, Roll No, Student Name, Status
 - **Sticky headers**: Always visible while scrolling
 - **Color-coded status**: Green (Present), Red (Absent), Blue (On-Duty)
@@ -194,6 +202,7 @@ Features:
 ## 📊 Mock Data
 
 ### Staff (10 members)
+
 ```
 STAFF001 - Dr. Rajesh Kumar (CSE)
 STAFF002 - Prof. Priya Sharma (CSE)
@@ -208,12 +217,14 @@ STAFF010 - Prof. Ananya Patel (IT)
 ```
 
 ### Departments & Classes
+
 - **Computer Science Engineering**: 3 classes (A, B, C)
 - **Information Technology**: 2 classes (A, B)
 - **Electronics & Communication**: 2 classes (A, B)
 - **Mechanical Engineering**: 2 classes (A, B)
 
 ### Students
+
 - 70+ students across all departments
 - Realistic Indian names and roll numbers
 
@@ -222,6 +233,7 @@ STAFF010 - Prof. Ananya Patel (IT)
 ### Adding More Staff
 
 Edit `data/mockStaffAndPeriods.ts`:
+
 ```typescript
 export const staffData: Staff[] = [
   { id: "STAFF011", name: "Your Name", department: "CSE" },
@@ -232,6 +244,7 @@ export const staffData: Staff[] = [
 ### Modifying Period Timings
 
 Edit `data/mockStaffAndPeriods.ts`:
+
 ```typescript
 export const periods: Period[] = [
   { id: 1, name: "Period 1", startTime: "09:00", endTime: "09:50" },
@@ -246,6 +259,7 @@ Edit `data/mockDatabase.ts` and add students to appropriate arrays.
 ### Changing Admin Code
 
 Edit `app/admin/login/page.tsx`:
+
 ```typescript
 if (adminCode.trim() === "YOUR_CODE") {
   // ...
@@ -290,5 +304,6 @@ This is a demo project. Feel free to fork and modify as needed!
 ---
 
 **Demo Credentials**:
+
 - **Staff**: STAFF001, STAFF002, STAFF003, etc.
 - **Admin**: ADMIN123 or admin

@@ -1,44 +1,44 @@
 {
   "brand": {
-    "primary": "#FFD700",
-    "primaryLight": "#FFE566",
-    "primarySoft": "#FFECA8",
-    "primarySurface": "#FFFDE7",
-    "primaryDeep": "#B38D00",
-    "secondary": "#2E7D32",
-    "secondaryDark": "#1F5D23",
-    "accent": "#4CAF50",
-    "background": "#FFD700",
-    "surface": "#FFFDE7"
+    "primary": "#D5F000",
+    "primaryLight": "#EAFE6D",
+    "primarySoft": "#F7FFD9",
+    "primarySurface": "#FFFFFF",
+    "primaryDeep": "#9DB200",
+    "secondary": "#0E8C3A",
+    "secondaryDark": "#09612A",
+    "accent": "#13B34A",
+    "background": "#F3F4F6",
+    "surface": "#FFFFFF"
   },
   "status": {
-    "success": "#4CAF50",
-    "successSoft": "#E6F7F0",
-    "successStrong": "#2E7D32",
-    "danger": "#F44336",
-    "dangerSoft": "#FFE8E6",
-    "dangerStrong": "#D32F2F",
-    "warning": "#FF9800",
-    "warningSoft": "#FFF3E0",
-    "warningStrong": "#EF6C00",
-    "info": "#2196F3",
-    "infoSoft": "#E0ECFF",
-    "infoStrong": "#1976D2"
+    "success": "#13B34A",
+    "successSoft": "#E4F9EC",
+    "successStrong": "#0A6B2C",
+    "danger": "#E63946",
+    "dangerSoft": "#FFE4E6",
+    "dangerStrong": "#B91C1C",
+    "warning": "#F4A300",
+    "warningSoft": "#FFF3D4",
+    "warningStrong": "#C47300",
+    "info": "#1C8AD5",
+    "infoSoft": "#E1F0FF",
+    "infoStrong": "#0D5D99"
   },
   "neutral": {
-    "primary": "#1F2937",
-    "secondary": "#4B5563",
+    "primary": "#1C1C1C",
+    "secondary": "#4D4D4D",
     "muted": "#9CA3AF",
-    "border": "#E5E7EB"
+    "border": "#E0E0E0"
   },
   "pastel": {
-    "peach": "#FFEED6",
-    "mint": "#E6F7F0",
-    "blue": "#E0ECFF",
-    "lavender": "#F5E9FF"
+    "peach": "#FFF2DA",
+    "mint": "#E8F9ED",
+    "blue": "#E5F1FF",
+    "lavender": "#F3ECFF"
   },
   "utility": {
-    "spinner": "#2E7D32",
+    "spinner": "#0E8C3A",
     "overlay": "rgba(0, 0, 0, 0.15)"
   }
 }
