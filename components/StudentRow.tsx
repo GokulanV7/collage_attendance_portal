@@ -1,5 +1,6 @@
 import React from "react";
 import { Student } from "@/types";
+import { appTheme } from "@/styles/theme";
 
 interface StudentRowProps {
   student: Student;
@@ -13,19 +14,28 @@ export const StudentRow: React.FC<StudentRowProps> = ({
   onToggle,
 }) => {
   return (
-    <div className="flex items-center justify-between p-4 bg-white border border-gray-200">
+    <div className="flex items-center justify-between p-4 bg-brand-surface border border-neutral-border rounded-2xl">
       <div className="flex-1">
-        <h3 className="text-sm font-medium text-slate-700">{student.name}</h3>
-        <p className="font-mono text-xs text-slate-500">{student.rollNo}</p>
+        <h3 className="text-sm font-medium text-neutral-primary">{student.name}</h3>
+        <p className="font-mono text-xs text-neutral-muted">{student.rollNo}</p>
       </div>
       <div className="flex gap-2">
         <button
           type="button"
           onClick={() => onToggle(student.id, true)}
-          className={`px-6 py-2 font-medium ${
+          style={
             isPresent
-              ? "bg-green-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              ? {
+                  backgroundColor: appTheme.status.success,
+                  color: appTheme.brand.surface,
+                  borderColor: appTheme.status.success,
+                }
+              : undefined
+          }
+          className={`px-6 py-2 font-medium rounded-full border-2 transition ${
+            isPresent
+              ? "shadow-sm"
+              : "bg-pastel-mint text-neutral-secondary border-neutral-border hover:bg-brand-surface"
           }`}
         >
           Present
@@ -33,10 +43,19 @@ export const StudentRow: React.FC<StudentRowProps> = ({
         <button
           type="button"
           onClick={() => onToggle(student.id, false)}
-          className={`px-6 py-2 font-medium ${
+          style={
             !isPresent
-              ? "bg-red-600 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              ? {
+                  backgroundColor: appTheme.status.danger,
+                  color: appTheme.brand.surface,
+                  borderColor: appTheme.status.danger,
+                }
+              : undefined
+          }
+          className={`px-6 py-2 font-medium rounded-full border-2 transition ${
+            !isPresent
+              ? "shadow-sm"
+              : "bg-pastel-peach text-neutral-secondary border-neutral-border hover:bg-brand-surface"
           }`}
         >
           Absent

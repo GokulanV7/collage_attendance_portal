@@ -9,7 +9,7 @@ import { Button } from "@/components/Button";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { getDepartments } from "@/data/mockDatabase";
 
-export default function TeacherDepartment() {
+export default function StaffDepartment() {
   const router = useRouter();
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [error, setError] = useState("");
@@ -19,7 +19,7 @@ export default function TeacherDepartment() {
 
   useEffect(() => {
     if (!sessionStorage.getItem("staffName") || !sessionStorage.getItem("selectedBatch")) {
-      router.push("/teacher/validate");
+      router.push("/staff/validate");
     }
   }, [router]);
 
@@ -30,7 +30,7 @@ export default function TeacherDepartment() {
     }
 
     sessionStorage.setItem("selectedDepartment", selectedDepartment);
-    router.push("/teacher/class-period");
+    router.push("/staff/class-period");
   };
 
   return (
@@ -38,7 +38,7 @@ export default function TeacherDepartment() {
       title="Select Department"
       subtitle="Choose the department"
       showBackButton
-      backHref="/teacher/batch"
+      backHref="/staff/batch"
     >
       <ProgressIndicator currentStep={3} totalSteps={6} steps={steps} />
 

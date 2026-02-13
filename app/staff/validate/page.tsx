@@ -8,7 +8,7 @@ import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { validateStaffId } from "@/data/mockStaffAndPeriods";
 
-export default function TeacherValidate() {
+export default function StaffValidate() {
   const router = useRouter();
   const [staffId, setStaffId] = useState("");
   const [error, setError] = useState("");
@@ -32,7 +32,7 @@ export default function TeacherValidate() {
     sessionStorage.setItem("staffDepartment", staff.department);
 
     // Navigate to batch selection
-    router.push("/teacher/batch");
+    router.push("/staff/batch");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -43,7 +43,7 @@ export default function TeacherValidate() {
 
   return (
     <PageLayout
-      title="Teacher Portal"
+      title="Staff Portal"
       subtitle="Validate your Staff ID to continue"
       showBackButton
       backHref="/"
@@ -51,10 +51,10 @@ export default function TeacherValidate() {
       <Card className="max-w-md mx-auto">
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-neutral-primary">
               Staff Authentication
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-neutral-secondary mt-1">
               Enter your Staff ID to access the attendance system
             </p>
           </div>
@@ -69,8 +69,8 @@ export default function TeacherValidate() {
             type="text"
           />
 
-          <div className="bg-blue-50 border border-blue-200 p-3">
-            <p className="text-sm text-blue-800">
+          <div className="bg-status-infoSoft border border-status-info p-3 rounded-2xl">
+            <p className="text-sm text-status-infoStrong">
               <strong>Sample Staff IDs:</strong> STAFF001, STAFF002, STAFF003,
               STAFF004, STAFF005
             </p>

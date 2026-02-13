@@ -12,7 +12,7 @@ import { getClassesByDepartment } from "@/data/mockDatabase";
 import { getPeriods } from "@/data/mockStaffAndPeriods";
 import { getDefaultPeriod, formatPeriodTime, getCurrentTime } from "@/utils/periodDetection";
 
-export default function TeacherClassPeriod() {
+export default function StaffClassPeriod() {
   const router = useRouter();
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedPeriods, setSelectedPeriods] = useState<number[]>([]);
@@ -26,7 +26,7 @@ export default function TeacherClassPeriod() {
   useEffect(() => {
     const dept = sessionStorage.getItem("selectedDepartment");
     if (!sessionStorage.getItem("staffName") || !sessionStorage.getItem("selectedBatch") || !dept) {
-      router.push("/teacher/validate");
+      router.push("/staff/validate");
       return;
     }
 
@@ -69,7 +69,7 @@ export default function TeacherClassPeriod() {
 
     sessionStorage.setItem("selectedClass", selectedClass);
     sessionStorage.setItem("selectedPeriods", JSON.stringify(selectedPeriods));
-    router.push("/teacher/mark-attendance");
+    router.push("/staff/mark-attendance");
   };
 
   return (
@@ -77,7 +77,7 @@ export default function TeacherClassPeriod() {
       title="Select Class & Period"
       subtitle="Choose class and teaching periods"
       showBackButton
-      backHref="/teacher/department"
+      backHref="/staff/department"
     >
       <ProgressIndicator currentStep={4} totalSteps={6} steps={steps} />
 
@@ -94,12 +94,12 @@ export default function TeacherClassPeriod() {
           />
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Select Teaching Period(s) <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-neutral-secondary mb-3">
+              Select Teaching Period(s) <span className="text-status-danger">*</span>
             </label>
             
-            <div className="bg-gray-50 border border-gray-200 p-4 mb-4">
-              <p className="text-sm text-gray-700">
+            <div className="bg-brand-primarySoft border border-brand-primary/40 p-4 mb-4 rounded-2xl">
+              <p className="text-sm text-brand-secondary">
                 <strong>Current Time:</strong> {currentTime} • Click periods to select/deselect.
               </p>
             </div>
@@ -114,21 +114,21 @@ export default function TeacherClassPeriod() {
                     type="button"
                     onClick={() => handlePeriodToggle(period.id, !isSelected)}
                     className={`
-                      px-4 py-4 border-2 font-medium text-center
+                      px-4 py-4 border-2 font-medium text-center rounded-2xl transition
                       ${
                         isSelected
-                          ? 'bg-primary-600 border-primary-600 text-white'
-                          : 'bg-white border-gray-300 text-gray-700 hover:border-gray-400'
+                          ? 'bg-brand-primary text-brand-secondary border-brand-secondary shadow-sm'
+                          : 'bg-brand-surface border-neutral-border text-neutral-primary hover:border-brand-secondary/60'
                       }
                     `}
                   >
                     <p className={`text-sm font-bold mb-1 ${
-                      isSelected ? 'text-white' : 'text-gray-900'
+                      isSelected ? 'text-brand-secondary' : 'text-neutral-primary'
                     }`}>
                       {period.name}
                     </p>
                     <p className={`text-xs ${
-                      isSelected ? 'text-primary-100' : 'text-gray-500'
+                      isSelected ? 'text-brand-secondary/80' : 'text-neutral-muted'
                     }`}>
                       {period.startTime} - {period.endTime}
                     </p>
@@ -139,8 +139,8 @@ export default function TeacherClassPeriod() {
             
             {/* Selection Summary */}
             {selectedPeriods.length > 0 && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200">
-                <p className="text-sm text-green-800">
+              <div className="mt-4 p-3 bg-status-successSoft border border-status-success rounded-2xl">
+                <p className="text-sm text-status-successStrong">
                   <strong>{selectedPeriods.length} period(s) selected:</strong>{' '}
                   {periods
                     .filter(p => selectedPeriods.includes(p.id))
@@ -151,7 +151,7 @@ export default function TeacherClassPeriod() {
             )}
             
             {errors.periods && (
-              <p className="mt-2 text-sm text-red-500">
+              <p className="mt-2 text-sm text-status-danger">
                 {errors.periods}
               </p>
             )}

@@ -1,10 +1,10 @@
 # Attendance Management Portal
 
-A comprehensive, mobile-first attendance management system with **separate Teacher and Admin interfaces**, built with Next.js, TypeScript, and Tailwind CSS.
+A comprehensive, mobile-first attendance management system with **separate Staff and Admin interfaces**, built with Next.js, TypeScript, and Tailwind CSS.
 
 ## ✨ Features
 
-### 🧑‍🏫 Teacher Portal
+### 🧑‍🏫 Staff Portal
 - **Staff Validation**: Secure authentication with Staff ID
 - **Multi-step Flow**: Guided 6-step process with progress indicator
 - **Time-based Period Selection**: Automatic detection of current teaching period
@@ -47,7 +47,7 @@ Collage_attendance_Portal/
 ├── app/
 │   ├── layout.tsx                    # Root layout with AttendanceProvider
 │   ├── page.tsx                      # Home page (Role selection)
-│   ├── teacher/
+│   ├── staff/
 │   │   ├── validate/page.tsx         # Screen 1: Staff validation
 │   │   ├── batch/page.tsx            # Screen 2: Batch selection
 │   │   ├── department/page.tsx       # Screen 3: Department selection
@@ -107,9 +107,9 @@ Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 📱 Usage Guide
 
-### Teacher Workflow
+### Staff Workflow
 
-1. **Home** → Select "Teacher Portal"
+1. **Home** → Select "Staff Portal"
 
 2. **Staff Validation** (Screen 1)
    - Enter Staff ID (e.g., STAFF001, STAFF002, STAFF003)
@@ -171,7 +171,7 @@ Period 8: 16:10 - 17:00
 ```
 
 - Current period is **auto-selected** by default
-- Teachers can **override** and select different/multiple periods
+- Staff can **override** and select different/multiple periods
 - Current time displayed for reference
 
 ### Three Attendance States
@@ -290,5 +290,5 @@ This is a demo project. Feel free to fork and modify as needed!
 ---
 
 **Demo Credentials**:
-- **Teacher**: STAFF001, STAFF002, STAFF003, etc.
+- **Staff**: STAFF001, STAFF002, STAFF003, etc.
 - **Admin**: ADMIN123 or admin

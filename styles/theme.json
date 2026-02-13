@@ -1,0 +1,44 @@
+{
+  "brand": {
+    "primary": "#FFD700",
+    "primaryLight": "#FFE566",
+    "primarySoft": "#FFECA8",
+    "primarySurface": "#FFFDE7",
+    "primaryDeep": "#B38D00",
+    "secondary": "#2E7D32",
+    "secondaryDark": "#1F5D23",
+    "accent": "#4CAF50",
+    "background": "#FFD700",
+    "surface": "#FFFDE7"
+  },
+  "status": {
+    "success": "#4CAF50",
+    "successSoft": "#E6F7F0",
+    "successStrong": "#2E7D32",
+    "danger": "#F44336",
+    "dangerSoft": "#FFE8E6",
+    "dangerStrong": "#D32F2F",
+    "warning": "#FF9800",
+    "warningSoft": "#FFF3E0",
+    "warningStrong": "#EF6C00",
+    "info": "#2196F3",
+    "infoSoft": "#E0ECFF",
+    "infoStrong": "#1976D2"
+  },
+  "neutral": {
+    "primary": "#1F2937",
+    "secondary": "#4B5563",
+    "muted": "#9CA3AF",
+    "border": "#E5E7EB"
+  },
+  "pastel": {
+    "peach": "#FFEED6",
+    "mint": "#E6F7F0",
+    "blue": "#E0ECFF",
+    "lavender": "#F5E9FF"
+  },
+  "utility": {
+    "spinner": "#2E7D32",
+    "overlay": "rgba(0, 0, 0, 0.15)"
+  }
+}

@@ -1,4 +1,5 @@
 import React from "react";
+import { appTheme } from "@/styles/theme";
 
 interface ProgressIndicatorProps {
   currentStep: number;
@@ -15,10 +16,10 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
     <div className="w-full mb-6">
       {/* Progress bar */}
       <div className="relative">
-        <div className="overflow-hidden h-2 mb-4 text-xs flex bg-gray-200">
+        <div className="overflow-hidden h-2 mb-4 text-xs flex bg-pastel-blue rounded-full">
           <div
             style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-            className="flex flex-col text-center whitespace-nowrap text-white justify-center bg-primary-600"
+            className="flex flex-col text-center whitespace-nowrap text-white justify-center bg-brand-secondary"
           ></div>
         </div>
       </div>
@@ -33,19 +34,28 @@ export const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
           return (
             <div key={index} className="flex flex-col items-center flex-1">
               <div
-                className={`w-8 h-8 flex items-center justify-center text-sm font-medium ${
+                style={
+                  isCompleted || isCurrent
+                    ? {
+                        backgroundColor: appTheme.brand.secondary,
+                        color: appTheme.brand.surface,
+                        borderColor: appTheme.brand.secondary,
+                      }
+                    : undefined
+                }
+                className={`w-10 h-10 flex items-center justify-center text-sm font-semibold rounded-full border-2 ${
                   isCompleted
-                    ? "bg-primary-600 text-white"
+                    ? "shadow-sm"
                     : isCurrent
-                    ? "bg-primary-600 text-white border-2 border-primary-300"
-                    : "bg-gray-200 text-gray-500"
+                    ? "shadow-sm"
+                    : "bg-brand-surface text-neutral-muted border-neutral-border"
                 }`}
               >
                 {isCompleted ? "✓" : stepNumber}
               </div>
               <p
                 className={`text-xs mt-2 text-center hidden sm:block ${
-                  isCurrent ? "text-primary-600 font-medium" : "text-gray-500"
+                  isCurrent ? "text-brand-secondary font-medium" : "text-neutral-muted"
                 }`}
               >
                 {step}

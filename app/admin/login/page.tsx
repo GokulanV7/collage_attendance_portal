@@ -37,10 +37,10 @@ export default function AdminLogin() {
       <Card className="max-w-md mx-auto">
         <div className="space-y-6">
           <div className="text-center">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-neutral-primary">
               Admin Authentication
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-neutral-secondary mt-1">
               Secure access to attendance management system
             </p>
           </div>
@@ -55,8 +55,8 @@ export default function AdminLogin() {
             type="text"
           />
 
-          <div className="bg-blue-50 border border-blue-200 p-3">
-            <p className="text-sm text-blue-800">
+          <div className="bg-status-infoSoft border border-status-info p-3 rounded-2xl">
+            <p className="text-sm text-status-infoStrong">
               <strong>Demo Code:</strong> ADMIN123 or admin
             </p>
           </div>

@@ -3,12 +3,68 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-rgb: 249, 250, 251;
+  /* Brand */
+  --color-primary: #ffd700;
+  --color-primary-light: #ffe566;
+  --color-primary-soft: #ffeca8;
+  --color-primary-surface: #fffde7;
+  --color-primary-deep: #b38d00;
+  --color-secondary: #2e7d32;
+  --color-secondary-dark: #1f5d23;
+  --color-accent: #4caf50;
+
+  /* Surfaces */
+  --color-background: #ffd700;
+  --color-surface: #fffde7;
+
+  /* Text */
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #9ca3af;
+
+  /* Borders */
+  --color-border: #e5e7eb;
+
+  /* Status */
+  --color-success: #4caf50;
+  --color-success-soft: #e6f7f0;
+  --color-danger: #f44336;
+  --color-danger-soft: #ffe8e6;
+  --color-warning: #ff9800;
+  --color-warning-soft: #fff3e0;
+  --color-info: #2196f3;
+  --color-info-soft: #e0ecff;
+
+  /* Pastel badges */
+  --color-pastel-peach: #ffeed6;
+  --color-pastel-mint: #e6f7f0;
+  --color-pastel-blue: #e0ecff;
+  --color-pastel-lavender: #f5e9ff;
+
+  /* Utility */
+  --color-spinner: #2e7d32;
+  --color-overlay: rgba(0, 0, 0, 0.15);
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
-  min-height: 100vh;
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-secondary);
+}
+
+.hero-surface {
+  background: linear-gradient(180deg, var(--color-primary-soft), var(--color-primary));
+}
+
+.cta-sheen {
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.45), transparent 45%);
 }

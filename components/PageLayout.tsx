@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { appTheme } from "@/styles/theme";
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -17,26 +18,38 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   backHref = "/",
 }) => {
   return (
-    <main className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-4xl mx-auto">
+    <main className="min-h-screen bg-brand-primary px-4 py-6 sm:p-8 lg:p-12">
+      <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center mb-8">
+        <header
+          className="rounded-3xl hero-surface p-6 sm:p-8 text-center border border-brand-primary/40 shadow-[0_8px_30px_rgba(0,0,0,0.08)]"
+          style={{ color: appTheme.brand.secondary }}
+        >
           {showBackButton && (
-            <div className="mb-4">
+            <div className="mb-4 text-left">
               <Link
                 href={backHref}
-                className="text-primary-600 hover:text-primary-700 font-medium"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-brand-secondary hover:text-brand-secondaryDark"
               >
                 ← Back
               </Link>
             </div>
           )}
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">{title}</h1>
-          {subtitle && <p className="text-slate-600">{subtitle}</p>}
-        </div>
+          <p className="text-xs uppercase tracking-[0.4em] font-semibold text-brand-secondary/80">
+            College Attendance Portal
+          </p>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3" style={{ color: appTheme.brand.secondary }}>
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-3 text-base sm:text-lg text-brand-secondary/80">
+              {subtitle}
+            </p>
+          )}
+        </header>
 
         {/* Content */}
-        {children}
+        <section className="space-y-6">{children}</section>
       </div>
     </main>
   );
