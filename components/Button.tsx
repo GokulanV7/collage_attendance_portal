@@ -23,7 +23,7 @@ export const Button: React.FC<ButtonProps> = ({
   className = "",
 }) => {
   const baseStyles =
-    "px-6 py-3 rounded-xl border-2 font-semibold tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed text-base transition-all duration-200 shadow-sm";
+    "px-6 py-3 rounded-full border-2 font-semibold tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed text-base transition-all duration-200";
 
   const variantClasses: Record<ButtonVariant, string> = {
     primary: "focus-visible:ring-brand-secondary",
@@ -33,12 +33,12 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyles: Record<ButtonVariant, React.CSSProperties> = {
     primary: {
-      backgroundColor: appTheme.brand.primary,
-      color: appTheme.brand.secondary,
+      backgroundColor: appTheme.brand.secondary,
+      color: appTheme.brand.surface,
       borderColor: appTheme.brand.secondary,
     },
     secondary: {
-      backgroundColor: appTheme.pastel.mint,
+      backgroundColor: appTheme.brand.primarySoft,
       color: appTheme.brand.secondary,
       borderColor: appTheme.brand.secondary,
     },
