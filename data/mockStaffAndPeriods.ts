@@ -14,17 +14,32 @@ export const staffData: Staff[] = [
   { id: "STAFF010", name: "Prof. Ananya Patel", department: "IT" },
 ];
 
-// Period timings
-export const periods: Period[] = [
-  { id: 1, name: "Period 1", startTime: "09:00", endTime: "09:50" },
-  { id: 2, name: "Period 2", startTime: "09:50", endTime: "10:40" },
-  { id: 3, name: "Period 3", startTime: "10:50", endTime: "11:40" },
-  { id: 4, name: "Period 4", startTime: "11:40", endTime: "12:30" },
-  { id: 5, name: "Period 5", startTime: "13:30", endTime: "14:20" },
-  { id: 6, name: "Period 6", startTime: "14:20", endTime: "15:10" },
-  { id: 7, name: "Period 7", startTime: "15:20", endTime: "16:10" },
-  { id: 8, name: "Period 8", startTime: "16:10", endTime: "17:00" },
+// 45-minute period timings
+export const periods45Min: Period[] = [
+  { id: 1, name: "Period 1", startTime: "09:00", endTime: "09:45" },
+  { id: 2, name: "Period 2", startTime: "09:45", endTime: "10:30" },
+  { id: 3, name: "Period 3", startTime: "10:45", endTime: "11:30" },
+  { id: 4, name: "Period 4", startTime: "11:30", endTime: "12:15" },
+  { id: 5, name: "Period 5", startTime: "13:30", endTime: "14:15" },
+  { id: 6, name: "Period 6", startTime: "14:15", endTime: "15:00" },
+  { id: 7, name: "Period 7", startTime: "15:15", endTime: "16:00" },
+  { id: 8, name: "Period 8", startTime: "16:00", endTime: "16:45" },
 ];
+
+// 1-hour period timings
+export const periods1Hour: Period[] = [
+  { id: 1, name: "Period 1", startTime: "09:00", endTime: "10:00" },
+  { id: 2, name: "Period 2", startTime: "10:00", endTime: "11:00" },
+  { id: 3, name: "Period 3", startTime: "11:15", endTime: "12:15" },
+  { id: 4, name: "Period 4", startTime: "12:15", endTime: "13:15" },
+  { id: 5, name: "Period 5", startTime: "14:00", endTime: "15:00" },
+  { id: 6, name: "Period 6", startTime: "15:00", endTime: "16:00" },
+  { id: 7, name: "Period 7", startTime: "16:15", endTime: "17:15" },
+  { id: 8, name: "Period 8", startTime: "17:15", endTime: "18:15" },
+];
+
+// Default periods (kept for backwards compatibility)
+export const periods: Period[] = periods45Min;
 
 // Helper functions
 export const validateStaffId = (staffId: string): Staff | null => {
@@ -32,8 +47,9 @@ export const validateStaffId = (staffId: string): Staff | null => {
   return staff || null;
 };
 
-export const getPeriods = (): Period[] => {
-  return periods;
+export const getPeriods = (duration?: "45min" | "1hour"): Period[] => {
+  if (duration === "1hour") return periods1Hour;
+  return periods45Min;
 };
 
 export const getStaffById = (staffId: string): Staff | undefined => {

@@ -9,6 +9,8 @@ interface InputProps {
   required?: boolean;
   error?: string;
   type?: "text" | "number" | "email";
+  min?: number;
+  max?: number;
 }
 
 export const Input: React.FC<InputProps> = ({
@@ -19,6 +21,8 @@ export const Input: React.FC<InputProps> = ({
   required = false,
   error,
   type = "text",
+  min,
+  max,
 }) => {
   return (
     <div className="w-full">
@@ -32,6 +36,8 @@ export const Input: React.FC<InputProps> = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         required={required}
+        min={min}
+        max={max}
         style={{ caretColor: appTheme.brand.secondary }}
         className={`w-full px-4 py-3 border rounded-xl bg-brand-surface text-neutral-primary placeholder:text-neutral-muted focus:outline-none focus:ring-2 focus:ring-brand-secondary focus:border-brand-secondary transition ${
           error ? "border-status-danger text-status-danger" : "border-neutral-border"
