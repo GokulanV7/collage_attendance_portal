@@ -17,38 +17,32 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   showBackButton = false,
   backHref = "/",
 }) => {
-  const formattedDate = new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date());
-
   const navButtonClass =
-    "inline-flex items-center gap-2 rounded-full border border-brand-secondary/30 bg-brand-primary-soft px-4 py-2 text-sm font-semibold text-brand-secondary hover:border-brand-secondary hover:bg-white transition";
+    "inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-brand-secondary/30 bg-brand-primary-soft px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-brand-secondary hover:border-brand-secondary hover:bg-white transition";
 
   return (
-    <main className="min-h-screen bg-brand-background px-4 py-6 sm:px-8 sm:py-10">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="rounded-[32px] border border-brand-secondary/30 bg-white shadow-[0_15px_40px_rgba(0,0,0,0.08)] overflow-hidden">
-          <div className="flex flex-col sm:flex-row items-center gap-4 bg-brand-primary px-5 py-4">
+    <main className="min-h-screen bg-brand-background px-3 py-4 sm:px-8 sm:py-10">
+      <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
+        <div className="rounded-2xl sm:rounded-[32px] border border-brand-secondary/30 bg-white shadow-[0_15px_40px_rgba(0,0,0,0.08)] overflow-hidden">
+          <div className="flex flex-row items-center gap-2 sm:gap-4 bg-brand-primary px-3 sm:px-5 py-3 sm:py-4">
             <Image
-              src="/main%20logo.png"
+              src="/College%20Logo.png"
               width={72}
               height={72}
               alt="Sri Shakthi Institute logo"
-              className="h-16 w-16 object-contain"
+              className="h-10 w-10 sm:h-16 sm:w-16 object-contain flex-shrink-0"
               priority
             />
-            <div className="text-center sm:text-left">
-              <p className="text-xl sm:text-2xl font-extrabold text-brand-secondary uppercase tracking-wide">
+            <div className="text-left min-w-0">
+              <p className="text-xs sm:text-xl md:text-2xl font-extrabold text-brand-secondary uppercase tracking-wide leading-tight">
                 Sri Shakthi Institute of Engineering and Technology
               </p>
-              <p className="text-sm font-semibold text-brand-secondaryDark/80">
+              <p className="text-[10px] sm:text-sm font-semibold text-brand-secondaryDark/80 mt-0.5 sm:mt-1">
                 An Autonomous Institution
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 border-t border-brand-secondary/20 bg-brand-primary-soft px-5 py-4">
+          <div className="flex items-center gap-2 sm:gap-3 border-t border-brand-secondary/20 bg-brand-primary-soft px-3 sm:px-5 py-2 sm:py-4">
             {showBackButton && (
               <Link href={backHref} className={navButtonClass}>
                 ← Back
@@ -57,25 +51,8 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
             <Link href="/" className={navButtonClass}>
               ⌂ Home
             </Link>
-            <span className="ml-auto text-sm font-semibold text-brand-secondaryDark">
-              {formattedDate}
-            </span>
           </div>
         </div>
-
-        <header className="rounded-3xl bg-brand-secondary text-white px-6 py-8 text-center shadow-[0_18px_28px_rgba(14,140,58,0.25)]">
-          <p className="text-xs uppercase tracking-[0.35em] font-semibold text-white/80">
-            College Attendance Portal
-          </p>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="mt-3 text-base sm:text-lg text-white/90">
-              {subtitle}
-            </p>
-          )}
-        </header>
 
         <section className="space-y-6">{children}</section>
       </div>

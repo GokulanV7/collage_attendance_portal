@@ -7,6 +7,7 @@ import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { RadioGroup, attendanceOptions } from "@/components/RadioGroup";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { getStudentsByClass, getBatches, getDepartments } from "@/data/mockDatabase";
 import { getPeriods } from "@/data/mockStaffAndPeriods";
 import { useAttendance } from "@/context/AttendanceContext";
@@ -17,6 +18,9 @@ export default function TeacherMarkAttendance() {
   const { addSubmission } = useAttendance();
   const [students, setStudents] = useState<Student[]>([]);
   const [attendanceMap, setAttendanceMap] = useState<Map<string, AttendanceStatus>>(new Map());
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [staffName, setStaffName] = useState("");
   const [contextInfo, setContextInfo] = useState({
     batch: "",
     department: "",
@@ -32,12 +36,16 @@ export default function TeacherMarkAttendance() {
     const batch = sessionStorage.getItem("selectedBatch");
     const dept = sessionStorage.getItem("selectedDepartment");
     const classId = sessionStorage.getItem("selectedClass");
-    const periodsStr = sessionStorage.getItem("selectedPeriods");
+    const numberOfPeriods = sessionStorage.getItem("numberOfPeriods");
+    const savedStaffName = sessionStorage.getItem("staffName");
 
-    if (!staffId || !batch || !dept || !classId || !periodsStr) {
+    if (!staffId || !batch || !dept || !classId || !numberOfPeriods) {
       router.push("/teacher/validate");
       return;
     }
+
+    // Set staff name
+    setStaffName(savedStaffName || "");
 
     // Load students
     const fetchedStudents = getStudentsByClass(dept, classId);
@@ -50,8 +58,9 @@ export default function TeacherMarkAttendance() {
     });
     setAttendanceMap(initialMap);
 
-    // Set context
-    const periods = JSON.parse(periodsStr) as number[];
+    // Set context - convert numberOfPeriods to period array for backwards compatibility
+    const periodCount = parseInt(numberOfPeriods);
+    const periods = Array.from({ length: periodCount }, (_, i) => i + 1);
     setContextInfo({ batch, department: dept, class: classId, periods });
   }, [router]);
 
@@ -67,47 +76,60 @@ export default function TeacherMarkAttendance() {
     setAttendanceMap(newMap);
   };
 
-  const handleSubmit = () => {
-    const staffId = sessionStorage.getItem("staffId") || "";
-    const staffName = sessionStorage.getItem("staffName") || "";
-    
-    // Get readable names
-    const batchName = getBatches().find(b => b.id === contextInfo.batch)?.name || "";
-    const deptName = getDepartments().find(d => d.id === contextInfo.department)?.name || "";
-    const allPeriods = getPeriods();
-    const className = contextInfo.class.split("-")[1] || contextInfo.class;
+  const handleSubmitClick = () => {
+    setShowConfirmPopup(true);
+  };
 
-    // Build attendance records
-    const attendanceRecords = students.map(student => ({
-      studentId: student.id,
-      studentName: student.name,
-      rollNo: student.rollNo,
-      status: attendanceMap.get(student.id) || "Present",
-    }));
+  const handleConfirmSubmit = () => {
+    setShowConfirmPopup(false);
+    setIsLoading(true);
 
-    // Create submission
-    const now = new Date();
-    const submission: AttendanceSubmission = {
-      id: `ATT${Date.now()}`,
-      batch: batchName,
-      department: deptName,
-      class: className,
-      periods: contextInfo.periods,
-      date: now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
-      time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
-      staffId,
-      staffName,
-      attendance: attendanceRecords,
-    };
+    // Simulate API call delay
+    setTimeout(() => {
+      const staffId = sessionStorage.getItem("staffId") || "";
+      
+      // Get readable names
+      const batchName = getBatches().find(b => b.id === contextInfo.batch)?.name || "";
+      const deptName = getDepartments().find(d => d.id === contextInfo.department)?.name || "";
+      const allPeriods = getPeriods();
+      const className = contextInfo.class.split("-")[1] || contextInfo.class;
 
-    // Save to context
-    addSubmission(submission);
+      // Build attendance records
+      const attendanceRecords = students.map(student => ({
+        studentId: student.id,
+        studentName: student.name,
+        rollNo: student.rollNo,
+        status: attendanceMap.get(student.id) || "Present",
+      }));
 
-    // Store for confirmation page
-    sessionStorage.setItem("lastSubmission", JSON.stringify(submission));
+      // Create submission
+      const now = new Date();
+      const submission: AttendanceSubmission = {
+        id: `ATT${Date.now()}`,
+        batch: batchName,
+        department: deptName,
+        class: className,
+        periods: contextInfo.periods,
+        date: now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
+        staffId,
+        staffName,
+        attendance: attendanceRecords,
+      };
 
-    // Navigate to confirmation
-    router.push("/teacher/confirmation");
+      // Save to context
+      addSubmission(submission);
+
+      // Store for confirmation page
+      sessionStorage.setItem("lastSubmission", JSON.stringify(submission));
+
+      // Navigate to confirmation
+      router.push("/teacher/confirmation");
+    }, 1500);
+  };
+
+  const handleCancelConfirm = () => {
+    setShowConfirmPopup(false);
   };
 
   const presentCount = Array.from(attendanceMap.values()).filter(s => s === "Present").length;
@@ -121,6 +143,31 @@ export default function TeacherMarkAttendance() {
       showBackButton
       backHref="/teacher/class-period"
     >
+      {/* Confirmation Popup */}
+      {showConfirmPopup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl">
+            <h3 className="text-xl font-bold text-neutral-primary mb-4">Confirm Submission</h3>
+            <p className="text-neutral-secondary mb-2">You are submitting attendance as:</p>
+            <p className="text-lg font-semibold text-brand-secondary mb-6">{staffName}</p>
+            <p className="text-sm text-neutral-muted mb-6">
+              Present: {presentCount} | Absent: {absentCount} | On-Duty: {onDutyCount}
+            </p>
+            <div className="flex gap-3">
+              <Button onClick={handleCancelConfirm} variant="secondary" className="flex-1">
+                Cancel
+              </Button>
+              <Button onClick={handleConfirmSubmit} className="flex-1">
+                Confirm
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Spinner */}
+      {isLoading && <LoadingSpinner message="Submitting attendance..." />}
+
       <ProgressIndicator currentStep={5} totalSteps={6} steps={steps} />
 
       {/* Summary Card */}
@@ -191,7 +238,7 @@ export default function TeacherMarkAttendance() {
           >
             Back
           </Button>
-          <Button onClick={handleSubmit} className="flex-1">
+          <Button onClick={handleSubmitClick} className="flex-1">
             Submit Attendance
           </Button>
         </div>
