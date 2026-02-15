@@ -31,33 +31,36 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid gap-6 md:grid-cols-2">
-          <Card title="Staff Portal" className="h-full">
-            <div className="space-y-3 text-sm text-neutral-secondary">
-              <p className="font-semibold text-brand-secondary">
-                Steps: Validate → Batch → Department → Class & Period → Mark → Confirm
+        {/* Staff Portal - Main Focus */}
+        <section>
+          <Card className="text-center py-6 sm:py-10">
+            <div className="space-y-2 mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-primary">Attendance Portal</h2>
+              <p className="text-sm text-neutral-secondary">
+                Mark student attendance quickly and easily
               </p>
             </div>
-            <Link href="/staff/validate" className="mt-6 block">
-              <Button variant="outline" fullWidth>
-                Continue as Staff
-              </Button>
-            </Link>
-          </Card>
-
-          <Card title="Admin Portal" className="h-full">
-            <div className="space-y-3 text-sm text-neutral-secondary">
-              <p className="font-semibold text-brand-secondary">
-                Required code: <span className="text-neutral-primary">ADMIN123</span> or <span className="text-neutral-primary">admin</span>
-              </p>
-            </div>
-            <Link href="/admin/login" className="mt-6 block">
-              <Button variant="outline" fullWidth>
-                Continue as Admin
+            <Link href="/staff/validate" className="block max-w-md mx-auto">
+              <Button fullWidth>
+                Start Attendance
               </Button>
             </Link>
           </Card>
         </section>
+
+        {/* Admin - Subtle icon in bottom-right corner */}
+        <div className="fixed bottom-4 right-4 z-50">
+          <Link
+            href="/admin/login"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-neutral-primary/5 hover:bg-neutral-primary/10 border border-neutral-border/40 hover:border-neutral-border transition-all group"
+            title="Admin"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-neutral-secondary/40 group-hover:text-neutral-secondary/70 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </Link>
+        </div>
       </div>
     </main>
   );

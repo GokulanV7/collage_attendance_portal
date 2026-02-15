@@ -28,7 +28,7 @@ export default function StaffMarkAttendance() {
     periods: [] as number[],
   });
 
-  const steps = ["Staff ID", "Batch", "Department", "Class & Period", "Mark", "Confirm"];
+  const steps = ["Staff ID", "Batch & Dept", "Class & Period", "Mark", "Confirm"];
 
   useEffect(() => {
     // Validate session
@@ -168,7 +168,7 @@ export default function StaffMarkAttendance() {
       {/* Loading Spinner */}
       {isLoading && <LoadingSpinner message="Submitting attendance..." />}
 
-      <ProgressIndicator currentStep={5} totalSteps={6} steps={steps} />
+      <ProgressIndicator currentStep={4} totalSteps={5} steps={steps} />
 
       {/* Summary Card */}
       <Card className="mb-4">
@@ -213,10 +213,10 @@ export default function StaffMarkAttendance() {
       <div className="space-y-3 mb-4">
         {students.map((student) => (
           <Card key={student.id}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h3 className="text-sm font-medium text-neutral-primary">{student.name}</h3>
-                <p className="font-mono text-xs text-neutral-muted">{student.rollNo}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                <h3 className="text-base font-bold text-neutral-primary">{student.name}</h3>
+                <p className="font-mono text-sm font-semibold text-neutral-secondary shrink-0">{student.rollNo}</p>
               </div>
               <RadioGroup
                 value={attendanceMap.get(student.id) || "Present"}

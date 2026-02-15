@@ -19,7 +19,7 @@ export default function StaffClassPeriod() {
   const [availableClasses, setAvailableClasses] = useState<{id: string, name: string}[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const steps = ["Staff ID", "Batch", "Department", "Class & Period", "Mark", "Confirm"];
+  const steps = ["Staff ID", "Batch & Dept", "Class & Period", "Mark", "Confirm"];
 
   const semesters = [
     { id: "1", name: "Semester 1" },
@@ -87,9 +87,9 @@ export default function StaffClassPeriod() {
       title="Select Class & Period"
       subtitle="Choose class and number of periods"
       showBackButton
-      backHref="/staff/department"
+      backHref="/staff/batch"
     >
-      <ProgressIndicator currentStep={4} totalSteps={6} steps={steps} />
+      <ProgressIndicator currentStep={3} totalSteps={5} steps={steps} />
 
       <Card>
         <div className="space-y-6">
