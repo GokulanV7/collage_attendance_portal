@@ -48,7 +48,8 @@ export interface AttendanceSubmission {
   batch: string;
   department: string;
   class: string;
-  periods: number[]; // array of period IDs
+  semester: string;
+  periods: Period[]; // array of period objects with full time data
   date: string;
   time: string;
   staffId: string;

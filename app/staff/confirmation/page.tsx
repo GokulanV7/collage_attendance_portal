@@ -7,7 +7,7 @@ import { Card } from "@/components/Card";
 import { Button } from "@/components/Button";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { AttendanceSubmission } from "@/types";
-import { getPeriods } from "@/data/mockStaffAndPeriods";
+import { formatTimeForDisplay } from "@/data/periodConfigs";
 
 export default function StaffConfirmation() {
   const [submission, setSubmission] = useState<AttendanceSubmission | null>(null);
@@ -28,10 +28,11 @@ export default function StaffConfirmation() {
   const onDutyCount = submission.attendance.filter(a => a.status === "On-Duty").length;
   const filteredStudents = submission.attendance.filter(a => a.status === selectedFilter);
 
-  const allPeriods = getPeriods();
-  const periodNames = submission.periods.map(pid => 
-    allPeriods.find(p => p.id === pid)?.name || `Period ${pid}`
-  ).join(", ");
+  // Format period display
+  const periodNames = submission.periods.map(p => p.name).join(", ");
+  const periodTimes = submission.periods.length === 1
+    ? `${formatTimeForDisplay(submission.periods[0].startTime)} - ${formatTimeForDisplay(submission.periods[0].endTime)}`
+    : `${formatTimeForDisplay(submission.periods[0].startTime)} - ${formatTimeForDisplay(submission.periods[submission.periods.length - 1].endTime)}`;
 
   return (
     <PageLayout
@@ -63,9 +64,16 @@ export default function StaffConfirmation() {
               <span className="text-neutral-secondary">Class:</span>
               <span className="font-medium">{submission.class}</span>
             </div>
-            <div className="flex justify-between">
+            {submission.semester && (
+              <div className="flex justify-between">
+                <span className="text-neutral-secondary">Semester:</span>
+                <span className="font-medium">{submission.semester}</span>
+              </div>
+            )}
+            <div className="flex flex-col gap-1">
               <span className="text-neutral-secondary">Period(s):</span>
               <span className="font-medium">{periodNames}</span>
+              <span className="text-xs text-neutral-secondary">{periodTimes}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-secondary">Date:</span>

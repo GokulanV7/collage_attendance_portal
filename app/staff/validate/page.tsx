@@ -6,12 +6,14 @@ import { PageLayout } from "@/components/PageLayout";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { validateStaffId } from "@/data/mockStaffAndPeriods";
 
 export default function StaffValidate() {
   const router = useRouter();
   const [staffId, setStaffId] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleValidate = () => {
     if (!staffId.trim()) {
@@ -19,35 +21,41 @@ export default function StaffValidate() {
       return;
     }
 
-    const staff = validateStaffId(staffId.trim());
-    
-    if (!staff) {
-      setError("Invalid Staff ID. Please try again.");
-      return;
-    }
+    setError("");
+    setIsLoading(true);
 
-    // Store staff info in sessionStorage
-    sessionStorage.setItem("staffId", staff.id);
-    sessionStorage.setItem("staffName", staff.name);
-    sessionStorage.setItem("staffDepartment", staff.department);
+    // Simulate validation delay
+    setTimeout(() => {
+      const staff = validateStaffId(staffId.trim());
+      
+      if (!staff) {
+        setError("Invalid Staff ID. Please try again.");
+        setIsLoading(false);
+        return;
+      }
 
-    // Navigate to batch selection
-    router.push("/staff/batch");
+      // Store staff info in sessionStorage
+      sessionStorage.setItem("staffId", staff.id);
+      sessionStorage.setItem("staffName", staff.name);
+      sessionStorage.setItem("staffDepartment", staff.department);
+
+      // Navigate to batch selection
+      router.push("/staff/batch");
+    }, 800);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !isLoading) {
       handleValidate();
     }
   };
 
   return (
     <PageLayout
-      title="Staff Portal"
+      title="Attendance Portal"
       subtitle="Validate your Staff ID to continue"
-      showBackButton
-      backHref="/"
     >
+      {isLoading && <LoadingSpinner message="Validating Staff ID..." />}
       <Card className="max-w-md mx-auto">
         <div className="space-y-6">
           <div className="text-center">
@@ -63,10 +71,12 @@ export default function StaffValidate() {
             label="Staff ID"
             value={staffId}
             onChange={setStaffId}
+            onKeyPress={handleKeyPress}
             placeholder="e.g., STAFF001"
             required
             error={error}
             type="text"
+            disabled={isLoading}
           />
 
           <div className="bg-status-infoSoft border border-status-info p-3 rounded-2xl">
@@ -76,8 +86,8 @@ export default function StaffValidate() {
             </p>
           </div>
 
-          <Button onClick={handleValidate} fullWidth>
-            Validate & Continue
+          <Button onClick={handleValidate} fullWidth disabled={isLoading}>
+            {isLoading ? "Validating..." : "Validate & Continue"}
           </Button>
         </div>
       </Card>

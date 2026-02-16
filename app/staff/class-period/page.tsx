@@ -6,16 +6,20 @@ import { PageLayout } from "@/components/PageLayout";
 import { Card } from "@/components/Card";
 import { Select } from "@/components/Select";
 import { Button } from "@/components/Button";
-import { Input } from "@/components/Input";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
+import { PeriodSelector } from "@/components/PeriodSelector";
 import { getClassesByDepartment } from "@/data/mockDatabase";
+import { getPeriodConfig } from "@/data/periodConfigs";
 
 export default function StaffClassPeriod() {
   const router = useRouter();
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("");
-  const [periodDuration, setPeriodDuration] = useState<"45min" | "1hour" | "">("");
-  const [numberOfPeriods, setNumberOfPeriods] = useState("");
+  const [periodDuration, setPeriodDuration] = useState<45 | 60 | null>(null);
+  const [selectedPeriods, setSelectedPeriods] = useState<{ start: number | null; end: number | null }>({ 
+    start: null, 
+    end: null 
+  });
   const [availableClasses, setAvailableClasses] = useState<{id: string, name: string}[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -44,8 +48,15 @@ export default function StaffClassPeriod() {
     setAvailableClasses(classes);
   }, [router]);
 
-  const handleDurationSelect = (duration: "45min" | "1hour") => {
+  const handleDurationSelect = (duration: 45 | 60) => {
     setPeriodDuration(duration);
+    // Reset period selection when duration changes
+    setSelectedPeriods({ start: null, end: null });
+  };
+
+  const handlePeriodSelection = (start: number, end: number) => {
+    setSelectedPeriods({ start, end });
+    setErrors({ ...errors, periods: "" });
   };
 
   const handleNext = () => {
@@ -63,11 +74,8 @@ export default function StaffClassPeriod() {
       newErrors.duration = "Please select period duration";
     }
     
-    const periodCount = parseInt(numberOfPeriods);
-    if (!numberOfPeriods || isNaN(periodCount) || periodCount < 1) {
-      newErrors.periods = "Please enter a valid number of periods (minimum 1)";
-    } else if (periodCount > 8) {
-      newErrors.periods = "Maximum 8 periods allowed";
+    if (selectedPeriods.start === null || selectedPeriods.end === null) {
+      newErrors.periods = "Please select period(s) for attendance";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -77,8 +85,9 @@ export default function StaffClassPeriod() {
 
     sessionStorage.setItem("selectedClass", selectedClass);
     sessionStorage.setItem("selectedSemester", selectedSemester);
-    sessionStorage.setItem("periodDuration", periodDuration);
-    sessionStorage.setItem("numberOfPeriods", numberOfPeriods);
+    sessionStorage.setItem("periodDuration", periodDuration!.toString());
+    sessionStorage.setItem("selectedPeriodStart", selectedPeriods.start!.toString());
+    sessionStorage.setItem("selectedPeriodEnd", selectedPeriods.end!.toString());
     router.push("/staff/mark-attendance");
   };
 
@@ -86,8 +95,6 @@ export default function StaffClassPeriod() {
     <PageLayout
       title="Select Class & Period"
       subtitle="Choose class and number of periods"
-      showBackButton
-      backHref="/staff/batch"
     >
       <ProgressIndicator currentStep={3} totalSteps={5} steps={steps} />
 
@@ -121,40 +128,42 @@ export default function StaffClassPeriod() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => handleDurationSelect("45min")}
+                onClick={() => handleDurationSelect(45)}
                 className={`
                   px-4 py-4 border-2 font-medium text-center rounded-2xl transition
                   ${
-                    periodDuration === "45min"
+                    periodDuration === 45
                       ? 'bg-brand-primary text-brand-secondary border-brand-secondary shadow-sm'
                       : 'bg-brand-surface border-neutral-border text-neutral-primary hover:border-brand-secondary/60'
                   }
                 `}
               >
                 <p className={`text-base font-bold ${
-                  periodDuration === "45min" ? 'text-brand-secondary' : 'text-neutral-primary'
+                  periodDuration === 45 ? 'text-brand-secondary' : 'text-neutral-primary'
                 }`}>
                   45 Minutes
                 </p>
+                <p className="text-xs text-neutral-secondary mt-1">8 periods/day</p>
               </button>
               
               <button
                 type="button"
-                onClick={() => handleDurationSelect("1hour")}
+                onClick={() => handleDurationSelect(60)}
                 className={`
                   px-4 py-4 border-2 font-medium text-center rounded-2xl transition
                   ${
-                    periodDuration === "1hour"
+                    periodDuration === 60
                       ? 'bg-brand-primary text-brand-secondary border-brand-secondary shadow-sm'
                       : 'bg-brand-surface border-neutral-border text-neutral-primary hover:border-brand-secondary/60'
                   }
                 `}
               >
                 <p className={`text-base font-bold ${
-                  periodDuration === "1hour" ? 'text-brand-secondary' : 'text-neutral-primary'
+                  periodDuration === 60 ? 'text-brand-secondary' : 'text-neutral-primary'
                 }`}>
                   1 Hour
                 </p>
+                <p className="text-xs text-neutral-secondary mt-1">7 periods/day</p>
               </button>
             </div>
             
@@ -165,17 +174,24 @@ export default function StaffClassPeriod() {
             )}
           </div>
 
-          <Input
-            label="Number of Periods"
-            type="number"
-            value={numberOfPeriods}
-            onChange={setNumberOfPeriods}
-            placeholder="Enter number of periods (1-8)"
-            required
-            error={errors.periods}
-            min={1}
-            max={8}
-          />
+          {/* Period Selection */}
+          {periodDuration && (
+            <div>
+              <label className="block text-sm font-medium text-neutral-secondary mb-3">
+                Select Period(s) <span className="text-status-danger">*</span>
+              </label>
+              <PeriodSelector
+                config={getPeriodConfig(periodDuration)}
+                onSelect={handlePeriodSelection}
+                value={selectedPeriods}
+              />
+              {errors.periods && (
+                <p className="mt-2 text-sm text-status-danger">
+                  {errors.periods}
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-3">
             <Button

@@ -48,8 +48,6 @@ export default function StaffBatch() {
     <PageLayout
       title="Select Batch & Department"
       subtitle={`Welcome, ${staffName}`}
-      showBackButton
-      backHref="/staff/validate"
     >
       <ProgressIndicator currentStep={2} totalSteps={5} steps={steps} />
 

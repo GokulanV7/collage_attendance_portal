@@ -31,8 +31,6 @@ export default function AdminLogin() {
     <PageLayout
       title="Admin Portal"
       subtitle="Enter admin code to access attendance records"
-      showBackButton
-      backHref="/"
     >
       <Card className="max-w-md mx-auto">
         <div className="space-y-6">

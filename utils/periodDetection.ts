@@ -1,10 +1,10 @@
 import { Period } from "@/types";
-import { periods } from "@/data/mockStaffAndPeriods";
+import { PeriodConfig, Break, getPeriodConfig } from "@/data/periodConfigs";
 
 /**
  * Converts time string "HH:MM" to minutes since midnight
  */
-const timeToMinutes = (time: string): number => {
+export const timeToMinutes = (time: string): number => {
   const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 };
@@ -20,19 +20,38 @@ export const getCurrentTime = (): string => {
 };
 
 /**
- * Detects which period is currently active based on current time
- * Returns the period ID or null if no period is active
+ * Check if current time is during a break
  */
-export const getCurrentPeriod = (): number | null => {
-  const currentTime = getCurrentTime();
-  const currentMinutes = timeToMinutes(currentTime);
+export const isBreakTime = (config: PeriodConfig, currentTime?: string): Break | null => {
+  const time = currentTime || getCurrentTime();
+  const currentMinutes = timeToMinutes(time);
 
-  for (const period of periods) {
+  for (const breakPeriod of config.breaks) {
+    const startMinutes = timeToMinutes(breakPeriod.startTime);
+    const endMinutes = timeToMinutes(breakPeriod.endTime);
+
+    if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
+      return breakPeriod;
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Detects which period is currently active based on current time
+ * Returns the period or null if no period is active (e.g., during break)
+ */
+export const getCurrentPeriod = (config: PeriodConfig, currentTime?: string): Period | null => {
+  const time = currentTime || getCurrentTime();
+  const currentMinutes = timeToMinutes(time);
+
+  for (const period of config.periods) {
     const startMinutes = timeToMinutes(period.startTime);
     const endMinutes = timeToMinutes(period.endTime);
 
     if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
-      return period.id;
+      return period;
     }
   }
 
@@ -42,15 +61,15 @@ export const getCurrentPeriod = (): number | null => {
 /**
  * Gets the next upcoming period based on current time
  */
-export const getNextPeriod = (): number | null => {
-  const currentTime = getCurrentTime();
-  const currentMinutes = timeToMinutes(currentTime);
+export const getNextPeriod = (config: PeriodConfig, currentTime?: string): Period | null => {
+  const time = currentTime || getCurrentTime();
+  const currentMinutes = timeToMinutes(time);
 
-  for (const period of periods) {
+  for (const period of config.periods) {
     const startMinutes = timeToMinutes(period.startTime);
     
     if (currentMinutes < startMinutes) {
-      return period.id;
+      return period;
     }
   }
 
@@ -60,11 +79,11 @@ export const getNextPeriod = (): number | null => {
 /**
  * Gets default selected period (current or next)
  */
-export const getDefaultPeriod = (): number | null => {
-  const current = getCurrentPeriod();
+export const getDefaultPeriod = (config: PeriodConfig): Period | null => {
+  const current = getCurrentPeriod(config);
   if (current !== null) return current;
   
-  return getNextPeriod();
+  return getNextPeriod(config);
 };
 
 /**
@@ -72,4 +91,39 @@ export const getDefaultPeriod = (): number | null => {
  */
 export const formatPeriodTime = (period: Period): string => {
   return `${period.name} (${period.startTime} - ${period.endTime})`;
+};
+
+/**
+ * Check if given time is within college hours
+ */
+export const isWithinCollegeHours = (config: PeriodConfig, currentTime?: string): boolean => {
+  const time = currentTime || getCurrentTime();
+  const currentMinutes = timeToMinutes(time);
+  const startMinutes = timeToMinutes(config.collegeStart);
+  const endMinutes = timeToMinutes(config.collegeEnd);
+
+  return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+};
+
+/**
+ * Get the period range display string (e.g., "Period 1 - Period 3: 8:30 AM - 10:45 AM")
+ */
+export const getPeriodRangeDisplay = (periods: Period[], startId: number, endId: number): string => {
+  const startPeriod = periods.find(p => p.id === startId);
+  const endPeriod = periods.find(p => p.id === endId);
+  
+  if (!startPeriod || !endPeriod) return "";
+  
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  };
+
+  if (startId === endId) {
+    return `${startPeriod.name}: ${formatTime(startPeriod.startTime)} - ${formatTime(startPeriod.endTime)}`;
+  }
+
+  return `${startPeriod.name} - ${endPeriod.name}: ${formatTime(startPeriod.startTime)} - ${formatTime(endPeriod.endTime)}`;
 };

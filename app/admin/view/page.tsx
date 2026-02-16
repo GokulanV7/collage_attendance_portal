@@ -102,7 +102,7 @@ export default function AdminView() {
               No Attendance Records Yet
             </h3>
             <p className="text-neutral-secondary mb-6">
-              Staff haven't submitted any attendance yet. Records will appear
+              Staff haven&apos;t submitted any attendance yet. Records will appear
               here once submitted.
             </p>
             <Link href="/staff/validate">

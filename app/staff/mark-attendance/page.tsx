@@ -9,9 +9,10 @@ import { RadioGroup, attendanceOptions } from "@/components/RadioGroup";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { getStudentsByClass, getBatches, getDepartments } from "@/data/mockDatabase";
-import { getPeriods } from "@/data/mockStaffAndPeriods";
+import { getPeriodConfig } from "@/data/periodConfigs";
+import { getPeriodRangeDisplay } from "@/utils/periodDetection";
 import { useAttendance } from "@/context/AttendanceContext";
-import { Student, AttendanceStatus, AttendanceSubmission } from "@/types";
+import { Student, AttendanceStatus, AttendanceSubmission, Period } from "@/types";
 
 export default function StaffMarkAttendance() {
   const router = useRouter();
@@ -25,7 +26,9 @@ export default function StaffMarkAttendance() {
     batch: "",
     department: "",
     class: "",
-    periods: [] as number[],
+    semester: "",
+    periods: [] as Period[],
+    periodDisplay: "",
   });
 
   const steps = ["Staff ID", "Batch & Dept", "Class & Period", "Mark", "Confirm"];
@@ -36,10 +39,13 @@ export default function StaffMarkAttendance() {
     const batch = sessionStorage.getItem("selectedBatch");
     const dept = sessionStorage.getItem("selectedDepartment");
     const classId = sessionStorage.getItem("selectedClass");
-    const numberOfPeriods = sessionStorage.getItem("numberOfPeriods");
+    const semester = sessionStorage.getItem("selectedSemester") || "";
+    const periodDuration = sessionStorage.getItem("periodDuration");
+    const periodStart = sessionStorage.getItem("selectedPeriodStart");
+    const periodEnd = sessionStorage.getItem("selectedPeriodEnd");
     const savedStaffName = sessionStorage.getItem("staffName");
 
-    if (!staffId || !batch || !dept || !classId || !numberOfPeriods) {
+    if (!staffId || !batch || !dept || !classId || !periodDuration || !periodStart || !periodEnd) {
       router.push("/staff/validate");
       return;
     }
@@ -58,10 +64,29 @@ export default function StaffMarkAttendance() {
     });
     setAttendanceMap(initialMap);
 
-    // Set context - convert numberOfPeriods to period array for backwards compatibility
-    const periodCount = parseInt(numberOfPeriods);
-    const periods = Array.from({ length: periodCount }, (_, i) => i + 1);
-    setContextInfo({ batch, department: dept, class: classId, periods });
+    // Get period configuration and selected periods
+    const duration = parseInt(periodDuration);
+    const config = getPeriodConfig(duration);
+    const startId = parseInt(periodStart);
+    const endId = parseInt(periodEnd);
+    
+    // Get the actual period objects for the selected range
+    const selectedPeriods = config.periods.filter(
+      (p) => p.id >= startId && p.id <= endId
+    );
+    
+    // Get display string for the period range
+    const periodDisplay = getPeriodRangeDisplay(config.periods, startId, endId);
+
+    // Set context with actual Period objects
+    setContextInfo({ 
+      batch, 
+      department: dept, 
+      class: classId, 
+      semester, 
+      periods: selectedPeriods,
+      periodDisplay 
+    });
   }, [router]);
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
@@ -91,7 +116,6 @@ export default function StaffMarkAttendance() {
       // Get readable names
       const batchName = getBatches().find(b => b.id === contextInfo.batch)?.name || "";
       const deptName = getDepartments().find(d => d.id === contextInfo.department)?.name || "";
-      const allPeriods = getPeriods();
       const className = contextInfo.class.split("-")[1] || contextInfo.class;
 
       // Build attendance records
@@ -109,6 +133,7 @@ export default function StaffMarkAttendance() {
         batch: batchName,
         department: deptName,
         class: className,
+        semester: contextInfo.semester,
         periods: contextInfo.periods,
         date: now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
         time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
@@ -139,9 +164,7 @@ export default function StaffMarkAttendance() {
   return (
     <PageLayout
       title="Mark Attendance"
-      subtitle="Set attendance status for each student"
-      showBackButton
-      backHref="/staff/class-period"
+      subtitle={contextInfo.periodDisplay ? `Marking for: ${contextInfo.periodDisplay}` : "Set attendance status for each student"}
     >
       {/* Confirmation Popup */}
       {showConfirmPopup && (

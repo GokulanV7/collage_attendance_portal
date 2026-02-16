@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from "react";
 import { AttendanceSubmission } from "@/types";
-import { getPeriods } from "@/data/mockStaffAndPeriods";
 
 interface DataTableProps {
   data: AttendanceSubmission[];
@@ -14,23 +13,20 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
   const [classFilter, setClassFilter] = useState("");
   const [staffFilter, setStaffFilter] = useState("");
 
-  const allPeriods = getPeriods();
-
   // Flatten data for table rows
   const tableRows = useMemo(() => {
     const rows: any[] = [];
     
     data.forEach((submission) => {
       submission.attendance.forEach((record) => {
-        submission.periods.forEach((periodId) => {
-          const period = allPeriods.find(p => p.id === periodId);
+        submission.periods.forEach((period) => {
           rows.push({
             date: submission.date,
             batch: submission.batch,
             department: submission.department,
             class: submission.class,
-            period: period?.name || `Period ${periodId}`,
-            periodId,
+            period: period.name,
+            periodId: period.id,
             staffId: submission.staffId,
             staffName: submission.staffName,
             rollNo: record.rollNo,
@@ -42,7 +38,18 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
     });
 
     return rows;
-  }, [data, allPeriods]);
+  }, [data]);
+
+  // Get unique periods from the data
+  const uniquePeriods = useMemo(() => {
+    const periodMap = new Map();
+    tableRows.forEach(row => {
+      if (!periodMap.has(row.periodId)) {
+        periodMap.set(row.periodId, row.period);
+      }
+    });
+    return Array.from(periodMap.entries()).map(([id, name]) => ({ id, name }));
+  }, [tableRows]);
 
   // Apply filters
   const filteredRows = useMemo(() => {
@@ -105,7 +112,7 @@ export const DataTable: React.FC<DataTableProps> = ({ data }) => {
             className="w-full px-3 py-2 border border-neutral-border rounded-xl bg-brand-surface text-neutral-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary"
           >
             <option value="">All Periods</option>
-            {allPeriods.map((period) => (
+            {uniquePeriods.map((period) => (
               <option key={period.id} value={period.id.toString()}>
                 {period.name}
               </option>
