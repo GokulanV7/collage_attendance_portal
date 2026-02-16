@@ -11,7 +11,8 @@ import { getPeriods } from "@/data/mockStaffAndPeriods";
 
 export default function TeacherConfirmation() {
   const [submission, setSubmission] = useState<AttendanceSubmission | null>(null);
-  const steps = ["Staff ID", "Batch", "Department", "Class & Period", "Mark", "Confirm"];
+  const [selectedFilter, setSelectedFilter] = useState<"Present" | "Absent" | "On-Duty">("Absent");
+  const steps = ["Staff ID", "Batch & Dept", "Class & Period", "Mark", "Confirm"];
 
   useEffect(() => {
     const submissionStr = sessionStorage.getItem("lastSubmission");
@@ -25,7 +26,7 @@ export default function TeacherConfirmation() {
   const presentCount = submission.attendance.filter(a => a.status === "Present").length;
   const absentCount = submission.attendance.filter(a => a.status === "Absent").length;
   const onDutyCount = submission.attendance.filter(a => a.status === "On-Duty").length;
-  const absentStudents = submission.attendance.filter(a => a.status === "Absent");
+  const filteredStudents = submission.attendance.filter(a => a.status === selectedFilter);
 
   const allPeriods = getPeriods();
   const periodNames = submission.periods.map(pid => 
@@ -37,7 +38,7 @@ export default function TeacherConfirmation() {
       title="Attendance Submitted"
       subtitle="Your attendance has been recorded successfully"
     >
-      <ProgressIndicator currentStep={6} totalSteps={6} steps={steps} />
+      <ProgressIndicator currentStep={5} totalSteps={5} steps={steps} />
 
       <Card className="mb-4">
         <div className="bg-status-successSoft border border-status-success p-4 mb-6 rounded-2xl">
@@ -89,32 +90,57 @@ export default function TeacherConfirmation() {
               <p className="text-sm text-neutral-secondary">Total</p>
               <p className="text-2xl font-bold text-neutral-primary">{submission.attendance.length}</p>
             </div>
-            <div className="bg-status-successSoft p-4 text-center rounded-2xl border border-status-success/60">
+            <div
+              onClick={() => setSelectedFilter("Present")}
+              className={`bg-status-successSoft p-4 text-center rounded-2xl border cursor-pointer transition-all ${selectedFilter === "Present" ? "border-status-success ring-2 ring-status-success shadow-md scale-105" : "border-status-success/60 hover:border-status-success"}`}
+            >
               <p className="text-sm text-status-successStrong/80">Present</p>
               <p className="text-2xl font-bold text-status-successStrong">{presentCount}</p>
             </div>
-            <div className="bg-status-dangerSoft p-4 text-center rounded-2xl border border-status-danger/60">
+            <div
+              onClick={() => setSelectedFilter("Absent")}
+              className={`bg-status-dangerSoft p-4 text-center rounded-2xl border cursor-pointer transition-all ${selectedFilter === "Absent" ? "border-status-danger ring-2 ring-status-danger shadow-md scale-105" : "border-status-danger/60 hover:border-status-danger"}`}
+            >
               <p className="text-sm text-status-dangerStrong/80">Absent</p>
               <p className="text-2xl font-bold text-status-dangerStrong">{absentCount}</p>
             </div>
-            <div className="bg-status-infoSoft p-4 text-center rounded-2xl border border-status-info/60">
+            <div
+              onClick={() => setSelectedFilter("On-Duty")}
+              className={`bg-status-infoSoft p-4 text-center rounded-2xl border cursor-pointer transition-all ${selectedFilter === "On-Duty" ? "border-status-info ring-2 ring-status-info shadow-md scale-105" : "border-status-info/60 hover:border-status-info"}`}
+            >
               <p className="text-sm text-status-infoStrong/80">On-Duty</p>
               <p className="text-2xl font-bold text-status-infoStrong">{onDutyCount}</p>
             </div>
           </div>
         </div>
 
-        {/* Absent Students */}
-        {absentStudents.length > 0 && (
+        {/* Filtered Students List */}
+        {filteredStudents.length > 0 && (
           <div className="mt-6">
-            <h3 className="font-semibold text-neutral-primary mb-3">Absent Students</h3>
-            <div className="bg-status-dangerSoft border border-status-danger p-4 space-y-2 rounded-2xl">
-              {absentStudents.map(student => (
-                <div key={student.studentId} className="flex justify-between text-sm text-status-dangerStrong">
+            <h3 className="font-semibold text-neutral-primary mb-3">{selectedFilter} Students</h3>
+            <div className={`p-4 space-y-2 rounded-2xl border ${
+              selectedFilter === "Present" ? "bg-status-successSoft border-status-success" :
+              selectedFilter === "Absent" ? "bg-status-dangerSoft border-status-danger" :
+              "bg-status-infoSoft border-status-info"
+            }`}>
+              {filteredStudents.map(student => (
+                <div key={student.studentId} className={`flex justify-between text-sm ${
+                  selectedFilter === "Present" ? "text-status-successStrong" :
+                  selectedFilter === "Absent" ? "text-status-dangerStrong" :
+                  "text-status-infoStrong"
+                }`}>
                   <span className="font-medium">{student.studentName}</span>
-                  <span className="text-status-dangerStrong/80">{student.rollNo}</span>
+                  <span className="opacity-80">{student.rollNo}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+        {filteredStudents.length === 0 && (
+          <div className="mt-6">
+            <h3 className="font-semibold text-neutral-primary mb-3">{selectedFilter} Students</h3>
+            <div className="bg-brand-background border border-neutral-border p-4 rounded-2xl">
+              <p className="text-sm text-neutral-secondary text-center">No {selectedFilter.toLowerCase()} students</p>
             </div>
           </div>
         )}

@@ -7,19 +7,20 @@ import { Card } from "@/components/Card";
 import { Select } from "@/components/Select";
 import { Button } from "@/components/Button";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
-import { getBatches } from "@/data/mockDatabase";
+import { getBatches, getDepartments } from "@/data/mockDatabase";
 
 export default function TeacherBatch() {
   const router = useRouter();
   const [staffName, setStaffName] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
-  const [error, setError] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const batches = getBatches();
-  const steps = ["Staff ID", "Batch", "Department", "Class & Period", "Mark", "Confirm"];
+  const departments = getDepartments();
+  const steps = ["Staff ID", "Batch & Dept", "Class & Period", "Mark", "Confirm"];
 
   useEffect(() => {
-    // Check if staff is validated
     const name = sessionStorage.getItem("staffName");
     if (!name) {
       router.push("/teacher/validate");
@@ -29,42 +30,50 @@ export default function TeacherBatch() {
   }, [router]);
 
   const handleNext = () => {
-    if (!selectedBatch) {
-      setError("Please select a batch");
+    const newErrors: Record<string, string> = {};
+    if (!selectedBatch) newErrors.batch = "Please select a batch";
+    if (!selectedDepartment) newErrors.department = "Please select a department";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     sessionStorage.setItem("selectedBatch", selectedBatch);
-    router.push("/teacher/department");
+    sessionStorage.setItem("selectedDepartment", selectedDepartment);
+    router.push("/teacher/class-period");
   };
 
   return (
     <PageLayout
-      title="Select Batch"
+      title="Select Batch & Department"
       subtitle={`Welcome, ${staffName}`}
       showBackButton
       backHref="/teacher/validate"
     >
-      <ProgressIndicator currentStep={2} totalSteps={6} steps={steps} />
+      <ProgressIndicator currentStep={2} totalSteps={5} steps={steps} />
 
       <Card>
         <div className="space-y-6">
           <Select
             label="Batch"
             value={selectedBatch}
-            onChange={setSelectedBatch}
+            onChange={(val) => { setSelectedBatch(val); setErrors(prev => ({...prev, batch: ""})); }}
             options={batches}
             placeholder="Select batch"
             required
-            error={error}
+            error={errors.batch}
           />
 
-          <div className="bg-pastel-blue p-4 rounded-2xl border border-neutral-border/60">
-            <p className="text-sm text-neutral-secondary">
-              <strong>Note:</strong> Select the academic batch for which you
-              want to mark attendance.
-            </p>
-          </div>
+          <Select
+            label="Department"
+            value={selectedDepartment}
+            onChange={(val) => { setSelectedDepartment(val); setErrors(prev => ({...prev, department: ""})); }}
+            options={departments}
+            placeholder="Select department"
+            required
+            error={errors.department}
+          />
 
           <div className="flex gap-3">
             <Button
