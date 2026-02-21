@@ -14,10 +14,10 @@ export default function StaffBatch() {
   const [staffName, setStaffName] = useState("");
   const [selectedBatch, setSelectedBatch] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [departmentOptions, setDepartmentOptions] = useState<{ id: string; name: string }[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const batches = getBatches();
-  const departments = getDepartments();
   const steps = ["Staff ID", "Batch & Dept", "Class & Period", "Mark", "Confirm"];
 
   useEffect(() => {
@@ -28,6 +28,18 @@ export default function StaffBatch() {
     }
     setStaffName(name);
   }, [router]);
+
+  useEffect(() => {
+    if (!selectedBatch) {
+      setDepartmentOptions([]);
+      setSelectedDepartment("");
+      return;
+    }
+
+    const departmentsForBatch = getDepartments(selectedBatch);
+    setDepartmentOptions(departmentsForBatch);
+    setSelectedDepartment("");
+  }, [selectedBatch]);
 
   const handleNext = () => {
     const newErrors: Record<string, string> = {};
@@ -67,8 +79,8 @@ export default function StaffBatch() {
             label="Department"
             value={selectedDepartment}
             onChange={(val) => { setSelectedDepartment(val); setErrors(prev => ({...prev, department: ""})); }}
-            options={departments}
-            placeholder="Select department"
+            options={departmentOptions}
+            placeholder={selectedBatch ? "Select department" : "Select batch first"}
             required
             error={errors.department}
           />

@@ -22,6 +22,7 @@ export default function StaffClassPeriod() {
   });
   const [availableClasses, setAvailableClasses] = useState<{id: string, name: string}[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [batchId, setBatchId] = useState("");
 
   const steps = ["Staff ID", "Batch & Dept", "Class & Period", "Mark", "Confirm"];
 
@@ -38,13 +39,15 @@ export default function StaffClassPeriod() {
 
   useEffect(() => {
     const dept = sessionStorage.getItem("selectedDepartment");
-    if (!sessionStorage.getItem("staffName") || !sessionStorage.getItem("selectedBatch") || !dept) {
+    const batch = sessionStorage.getItem("selectedBatch");
+    if (!sessionStorage.getItem("staffName") || !batch || !dept) {
       router.push("/staff/validate");
       return;
     }
 
+    setBatchId(batch);
     // Load classes
-    const classes = getClassesByDepartment(dept);
+    const classes = getClassesByDepartment(batch, dept);
     setAvailableClasses(classes);
   }, [router]);
 
