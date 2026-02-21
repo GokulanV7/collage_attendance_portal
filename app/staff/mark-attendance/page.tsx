@@ -54,7 +54,7 @@ export default function StaffMarkAttendance() {
     setStaffName(savedStaffName || "");
 
     // Load students
-    const fetchedStudents = getStudentsByClass(dept, classId);
+    const fetchedStudents = getStudentsByClass(batch, dept, classId);
     setStudents(fetchedStudents);
 
     // Initialize all as Present
@@ -115,7 +115,7 @@ export default function StaffMarkAttendance() {
       
       // Get readable names
       const batchName = getBatches().find(b => b.id === contextInfo.batch)?.name || "";
-      const deptName = getDepartments().find(d => d.id === contextInfo.department)?.name || "";
+      const deptName = getDepartments(contextInfo.batch).find(d => d.id === contextInfo.department)?.name || "";
       const className = contextInfo.class.split("-")[1] || contextInfo.class;
 
       // Build attendance records

@@ -12,19 +12,33 @@ export default function AdminLogin() {
   const [adminCode, setAdminCode] = useState("");
   const [error, setError] = useState("");
 
+  const ADMIN_CODES: Record<string, { deptId: string; deptName: string }> = {
+    CSEADMIN: { deptId: "CSE", deptName: "Computer Science Engineering" },
+    ITADMIN: { deptId: "IT", deptName: "Information Technology" },
+    ECEADMIN: { deptId: "ECE", deptName: "Electronics and Communication Engineering" },
+    MEADMIN: { deptId: "ME", deptName: "Mechanical Engineering" },
+    AIMLADMIN: { deptId: "AIML", deptName: "Artificial Intelligence & ML" },
+  };
+
   const handleLogin = () => {
     if (!adminCode.trim()) {
       setError("Admin code is required");
       return;
     }
 
-    // Simple mock validation
-    if (adminCode.trim() === "ADMIN123" || adminCode.trim().toLowerCase() === "admin") {
-      sessionStorage.setItem("isAdmin", "true");
-      router.push("/admin/view");
-    } else {
-      setError("Invalid admin code");
+    const normalized = adminCode.trim().toUpperCase();
+    const match = ADMIN_CODES[normalized];
+
+    if (!match) {
+      setError("Invalid admin code. Try CSEADMIN, ITADMIN, ECEADMIN, MEADMIN, AIMLADMIN.");
+      return;
     }
+
+    sessionStorage.setItem("isAdmin", "true");
+    sessionStorage.setItem("adminDeptId", match.deptId);
+    sessionStorage.setItem("adminDeptName", match.deptName);
+    sessionStorage.setItem("adminCode", normalized);
+    router.push("/admin/view");
   };
 
   return (
@@ -55,7 +69,7 @@ export default function AdminLogin() {
 
           <div className="bg-status-infoSoft border border-status-info p-3 rounded-2xl">
             <p className="text-sm text-status-infoStrong">
-              <strong>Demo Code:</strong> ADMIN123 or admin
+              <strong>Demo Codes:</strong> CSEADMIN, ITADMIN, ECEADMIN, MEADMIN, AIMLADMIN
             </p>
           </div>
 

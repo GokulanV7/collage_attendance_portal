@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { AttendanceSubmission } from "@/types";
+import { safeSessionStorage } from "@/utils/safeSessionStorage";
 
 interface AttendanceContextType {
   submissions: AttendanceSubmission[];
@@ -18,9 +19,24 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [submissions, setSubmissions] = useState<AttendanceSubmission[]>([]);
+  const storageKey = "attendanceSubmissions";
+
+  useEffect(() => {
+    const stored = safeSessionStorage.getJSON<AttendanceSubmission[]>(
+      storageKey,
+      []
+    );
+    if (stored && Array.isArray(stored)) {
+      setSubmissions(stored);
+    }
+  }, []);
 
   const addSubmission = (submission: AttendanceSubmission) => {
-    setSubmissions((prev) => [...prev, submission]);
+    setSubmissions((prev) => {
+      const next = [...prev, submission];
+      safeSessionStorage.setJSON(storageKey, next);
+      return next;
+    });
   };
 
   const getSubmissions = () => {
@@ -29,6 +45,7 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({
 
   const clearSubmissions = () => {
     setSubmissions([]);
+    safeSessionStorage.removeItem(storageKey);
   };
 
   return (

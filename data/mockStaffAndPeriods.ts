@@ -12,6 +12,8 @@ export const staffData: Staff[] = [
   { id: "STAFF008", name: "Prof. Deepa Rao", department: "ME" },
   { id: "STAFF009", name: "Dr. Ganesh Murthy", department: "CSE" },
   { id: "STAFF010", name: "Prof. Ananya Patel", department: "IT" },
+  { id: "STAFF011", name: "Dr. Shreya Kapoor", department: "AIML" },
+  { id: "STAFF012", name: "Prof. Rahul Varma", department: "AIML" },
 ];
 
 // 45-minute period timings
