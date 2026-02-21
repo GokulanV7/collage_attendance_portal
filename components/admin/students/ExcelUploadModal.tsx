@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useStudents } from '@/context/StudentsContext';
 import { parseExcelFile, ParsedStudentRow } from '@/utils/excel/studentExcel';
 
@@ -114,15 +114,21 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
   };
 
   const handleClose = () => {
-    setStep('upload');
-    setParsedData([]);
-    setParseErrors([]);
-    setResult(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
     onClose();
   };
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setStep('upload');
+      setParsedData([]);
+      setParseErrors([]);
+      setResult(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
