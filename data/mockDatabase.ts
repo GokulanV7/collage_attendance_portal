@@ -1,4 +1,58 @@
-import { Batch, Department, Student, Class } from "@/types";
+import { Batch, Department, Student, Class, Subject } from "@/types";
+
+// Subjects by department
+const subjectsByDepartment: Record<string, Subject[]> = {
+  CSE: [
+    { id: "CSE101", name: "Data Structures", code: "CS101" },
+    { id: "CSE102", name: "Database Management Systems", code: "CS102" },
+    { id: "CSE103", name: "Operating Systems", code: "CS103" },
+    { id: "CSE104", name: "Computer Networks", code: "CS104" },
+    { id: "CSE105", name: "Software Engineering", code: "CS105" },
+    { id: "CSE106", name: "Web Technologies", code: "CS106" },
+    { id: "CSE107", name: "Machine Learning", code: "CS107" },
+    { id: "CSE108", name: "Artificial Intelligence", code: "CS108" },
+  ],
+  IT: [
+    { id: "IT101", name: "Information Security", code: "IT101" },
+    { id: "IT102", name: "Cloud Computing", code: "IT102" },
+    { id: "IT103", name: "Mobile Application Development", code: "IT103" },
+    { id: "IT104", name: "Data Analytics", code: "IT104" },
+    { id: "IT105", name: "Internet of Things", code: "IT105" },
+    { id: "IT106", name: "Big Data Technologies", code: "IT106" },
+    { id: "IT107", name: "Network Administration", code: "IT107" },
+    { id: "IT108", name: "System Analysis & Design", code: "IT108" },
+  ],
+  ECE: [
+    { id: "ECE101", name: "Digital Electronics", code: "EC101" },
+    { id: "ECE102", name: "Signal Processing", code: "EC102" },
+    { id: "ECE103", name: "Communication Systems", code: "EC103" },
+    { id: "ECE104", name: "VLSI Design", code: "EC104" },
+    { id: "ECE105", name: "Embedded Systems", code: "EC105" },
+    { id: "ECE106", name: "Microprocessors", code: "EC106" },
+    { id: "ECE107", name: "Antenna Theory", code: "EC107" },
+    { id: "ECE108", name: "Control Systems", code: "EC108" },
+  ],
+  ME: [
+    { id: "ME101", name: "Thermodynamics", code: "ME101" },
+    { id: "ME102", name: "Fluid Mechanics", code: "ME102" },
+    { id: "ME103", name: "Machine Design", code: "ME103" },
+    { id: "ME104", name: "Manufacturing Processes", code: "ME104" },
+    { id: "ME105", name: "Heat Transfer", code: "ME105" },
+    { id: "ME106", name: "Automobile Engineering", code: "ME106" },
+    { id: "ME107", name: "CAD/CAM", code: "ME107" },
+    { id: "ME108", name: "Robotics", code: "ME108" },
+  ],
+  AIML: [
+    { id: "AIML101", name: "Introduction to AI", code: "AI101" },
+    { id: "AIML102", name: "Deep Learning", code: "AI102" },
+    { id: "AIML103", name: "Natural Language Processing", code: "AI103" },
+    { id: "AIML104", name: "Computer Vision", code: "AI104" },
+    { id: "AIML105", name: "Reinforcement Learning", code: "AI105" },
+    { id: "AIML106", name: "Neural Networks", code: "AI106" },
+    { id: "AIML107", name: "Pattern Recognition", code: "AI107" },
+    { id: "AIML108", name: "AI Ethics", code: "AI108" },
+  ],
+};
 
 export const batches: Batch[] = [
   { id: "2021-2025", name: "2021–2025" },
@@ -231,6 +285,10 @@ export const getStudentsByClass = (
   const classes = getClassesByDepartment(batchId, departmentId);
   const classData = classes.find((c) => c.id === classId);
   return classData?.students || [];
+};
+
+export const getSubjectsByDepartment = (departmentId: string): Subject[] => {
+  return subjectsByDepartment[departmentId] || [];
 };
 
 // Backwards compatibility export for any legacy imports

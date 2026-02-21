@@ -8,19 +8,22 @@ import { Select } from "@/components/Select";
 import { Button } from "@/components/Button";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { PeriodSelector } from "@/components/PeriodSelector";
-import { getClassesByDepartment } from "@/data/mockDatabase";
+import { getClassesByDepartment, getSubjectsByDepartment } from "@/data/mockDatabase";
 import { getPeriodConfig } from "@/data/periodConfigs";
+import { Subject } from "@/types";
 
 export default function StaffClassPeriod() {
   const router = useRouter();
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSemester, setSelectedSemester] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
   const [periodDuration, setPeriodDuration] = useState<45 | 60 | null>(null);
   const [selectedPeriods, setSelectedPeriods] = useState<{ start: number | null; end: number | null }>({ 
     start: null, 
     end: null 
   });
   const [availableClasses, setAvailableClasses] = useState<{id: string, name: string}[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [batchId, setBatchId] = useState("");
 
@@ -49,6 +52,10 @@ export default function StaffClassPeriod() {
     // Load classes
     const classes = getClassesByDepartment(batch, dept);
     setAvailableClasses(classes);
+    
+    // Load subjects based on department
+    const subjects = getSubjectsByDepartment(dept);
+    setAvailableSubjects(subjects);
   }, [router]);
 
   const handleDurationSelect = (duration: 45 | 60) => {
@@ -73,6 +80,10 @@ export default function StaffClassPeriod() {
       newErrors.semester = "Please select a semester";
     }
 
+    if (!selectedSubject) {
+      newErrors.subject = "Please select a subject";
+    }
+
     if (!periodDuration) {
       newErrors.duration = "Please select period duration";
     }
@@ -86,8 +97,13 @@ export default function StaffClassPeriod() {
       return;
     }
 
+    // Find selected subject details
+    const subjectDetails = availableSubjects.find(s => s.id === selectedSubject);
+
     sessionStorage.setItem("selectedClass", selectedClass);
     sessionStorage.setItem("selectedSemester", selectedSemester);
+    sessionStorage.setItem("selectedSubject", subjectDetails?.name || "");
+    sessionStorage.setItem("selectedSubjectCode", subjectDetails?.code || "");
     sessionStorage.setItem("periodDuration", periodDuration!.toString());
     sessionStorage.setItem("selectedPeriodStart", selectedPeriods.start!.toString());
     sessionStorage.setItem("selectedPeriodEnd", selectedPeriods.end!.toString());
@@ -121,6 +137,16 @@ export default function StaffClassPeriod() {
             placeholder="Select semester"
             required
             error={errors.semester}
+          />
+
+          <Select
+            label="Subject"
+            value={selectedSubject}
+            onChange={setSelectedSubject}
+            options={availableSubjects.map(s => ({ id: s.id, name: `${s.name} (${s.code})` }))}
+            placeholder="Select subject"
+            required
+            error={errors.subject}
           />
 
           <div>

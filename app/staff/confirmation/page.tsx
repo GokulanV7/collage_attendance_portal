@@ -70,6 +70,12 @@ export default function StaffConfirmation() {
                 <span className="font-medium">{submission.semester}</span>
               </div>
             )}
+            {submission.subject && (
+              <div className="flex justify-between">
+                <span className="text-neutral-secondary">Subject:</span>
+                <span className="font-medium">{submission.subject} ({submission.subjectCode})</span>
+              </div>
+            )}
             <div className="flex flex-col gap-1">
               <span className="text-neutral-secondary">Period(s):</span>
               <span className="font-medium">{periodNames}</span>
