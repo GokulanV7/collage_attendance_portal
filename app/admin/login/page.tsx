@@ -38,7 +38,7 @@ export default function AdminLogin() {
     sessionStorage.setItem("adminDeptId", match.deptId);
     sessionStorage.setItem("adminDeptName", match.deptName);
     sessionStorage.setItem("adminCode", normalized);
-    router.push("/admin/view");
+    router.push("/admin/dashboard");
   };
 
   return (

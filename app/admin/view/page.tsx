@@ -14,7 +14,6 @@ import { useAttendance } from "@/context/AttendanceContext";
 
 export default function AdminView() {
   const { submissions } = useAttendance();
-  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     batch: "",
     className: "",
@@ -119,15 +118,15 @@ export default function AdminView() {
       if (filters.semester && row.semester !== filters.semester) return false;
       if (filters.subject && row.subject !== filters.subject) return false;
       if (filters.status && row.status !== filters.status) return false;
-      if (filters.search || searchQuery) {
-        const query = (filters.search || searchQuery).toLowerCase();
+      if (filters.search) {
+        const query = filters.search.toLowerCase();
         if (!`${row.studentName} ${row.rollNo}`.toLowerCase().includes(query)) {
           return false;
         }
       }
       return true;
     });
-  }, [rowsWithAttendance, filters, searchQuery]);
+  }, [rowsWithAttendance, filters]);
 
   // Calculate chart data
   const chartData = useMemo(() => {
@@ -180,12 +179,8 @@ export default function AdminView() {
     URL.revokeObjectURL(url);
   }, [filteredRows]);
 
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-  }, []);
-
   return (
-    <AdminLayout onSearch={handleSearch}>
+    <AdminLayout>
       <div className="space-y-6">
         {/* Analytics Charts */}
         <AnalyticsCharts

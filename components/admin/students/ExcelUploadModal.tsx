@@ -114,21 +114,16 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
   };
 
   const handleClose = () => {
+    // Reset state before closing to prevent flashing the upload screen
+    setStep('upload');
+    setParsedData([]);
+    setParseErrors([]);
+    setResult(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     onClose();
   };
-
-  // Reset state when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setStep('upload');
-      setParsedData([]);
-      setParseErrors([]);
-      setResult(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -142,7 +137,10 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
         />
 
         {/* Modal */}
-        <div className="relative w-full max-w-4xl rounded-xl bg-white shadow-2xl">
+        <div 
+          className="relative w-full max-w-4xl rounded-xl bg-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
             <h2 className="text-xl font-semibold text-gray-900">
@@ -167,7 +165,7 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
               <div className="space-y-6">
                 {/* Dropzone */}
                 <div
-                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                  className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
                     loading ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:border-blue-400'
                   }`}
                 >

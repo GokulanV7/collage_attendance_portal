@@ -3,37 +3,26 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "./Sidebar";
-import { TopNavbar } from "./TopNavbar";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  onSearch?: (query: string) => void;
 }
 
-export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onSearch }) => {
+export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [deptName, setDeptName] = useState("");
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
     const isAdmin = sessionStorage.getItem("isAdmin");
-    const adminDeptName = sessionStorage.getItem("adminDeptName") || "";
 
     if (!isAdmin) {
       router.push("/admin/login");
       return;
     }
 
-    setDeptName(adminDeptName);
     setIsAuthorized(true);
   }, [router]);
-
-  const handleSearch = (query: string) => {
-    if (onSearch) {
-      onSearch(query);
-    }
-  };
 
   if (!isAuthorized) {
     return (
@@ -52,8 +41,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children, onSearch }) 
           isCollapsed ? "ml-16" : "ml-64"
         }`}
       >
-        <TopNavbar deptName={deptName} onSearch={handleSearch} />
-        
         <main className="p-6">
           {children}
         </main>
