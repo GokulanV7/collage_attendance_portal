@@ -27,6 +27,8 @@ export default function StaffMarkAttendance() {
     department: "",
     class: "",
     semester: "",
+    subject: "",
+    subjectCode: "",
     periods: [] as Period[],
     periodDisplay: "",
   });
@@ -40,6 +42,8 @@ export default function StaffMarkAttendance() {
     const dept = sessionStorage.getItem("selectedDepartment");
     const classId = sessionStorage.getItem("selectedClass");
     const semester = sessionStorage.getItem("selectedSemester") || "";
+    const subject = sessionStorage.getItem("selectedSubject") || "";
+    const subjectCode = sessionStorage.getItem("selectedSubjectCode") || "";
     const periodDuration = sessionStorage.getItem("periodDuration");
     const periodStart = sessionStorage.getItem("selectedPeriodStart");
     const periodEnd = sessionStorage.getItem("selectedPeriodEnd");
@@ -83,7 +87,9 @@ export default function StaffMarkAttendance() {
       batch, 
       department: dept, 
       class: classId, 
-      semester, 
+      semester,
+      subject,
+      subjectCode,
       periods: selectedPeriods,
       periodDisplay 
     });
@@ -134,6 +140,8 @@ export default function StaffMarkAttendance() {
         department: deptName,
         class: className,
         semester: contextInfo.semester,
+        subject: contextInfo.subject,
+        subjectCode: contextInfo.subjectCode,
         periods: contextInfo.periods,
         date: now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
         time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),

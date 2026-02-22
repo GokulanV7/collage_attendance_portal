@@ -4,6 +4,20 @@ export interface Student {
   rollNo: string;
 }
 
+// Extended Student for Admin management
+export interface AdminStudent {
+  id: string;
+  name: string;
+  rollNo: string;
+  batch: string;
+  department: string;
+  class: string;
+  semester: number;
+  email?: string;
+  phone?: string;
+  createdAt: string;
+}
+
 export interface Class {
   id: string;
   name: string;
@@ -43,12 +57,20 @@ export interface Staff {
   department: string;
 }
 
+export interface Subject {
+  id: string;
+  name: string;
+  code: string;
+}
+
 export interface AttendanceSubmission {
   id: string;
   batch: string;
   department: string;
   class: string;
   semester: string;
+  subject: string;
+  subjectCode: string;
   periods: Period[]; // array of period objects with full time data
   date: string;
   time: string;
