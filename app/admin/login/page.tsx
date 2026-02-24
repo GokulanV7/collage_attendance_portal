@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PageLayout } from "@/components/PageLayout";
+import Image from "next/image";
 import { Card } from "@/components/Card";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
@@ -42,42 +42,61 @@ export default function AdminLogin() {
   };
 
   return (
-    <PageLayout
-      title="Admin Portal"
-      subtitle="Enter admin code to access attendance records"
-    >
-      <Card className="max-w-md mx-auto">
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold text-neutral-primary">
-              Admin Authentication
-            </h2>
-            <p className="text-sm text-neutral-secondary mt-1">
-              Secure access to attendance management system
-            </p>
-          </div>
-
-          <Input
-            label="Admin Code"
-            value={adminCode}
-            onChange={setAdminCode}
-            placeholder="Enter admin code"
-            required
-            error={error}
-            type="text"
+    <main className="min-h-screen bg-brand-background flex flex-col items-center justify-center px-3 py-4 sm:px-8 sm:py-10">
+      <div className="w-full max-w-md space-y-6">
+        {/* College Logo & Name */}
+        <div className="flex flex-col items-center text-center space-y-2">
+          <Image
+            src="/College%20Logo.png"
+            width={80}
+            height={80}
+            alt="Sri Shakthi Institute logo"
+            className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
+            priority
           />
-
-          <div className="bg-status-infoSoft border border-status-info p-3 rounded-2xl">
-            <p className="text-sm text-status-infoStrong">
-              <strong>Demo Codes:</strong> CSEADMIN, ITADMIN, ECEADMIN, MEADMIN, AIMLADMIN
+          <div>
+            <h1 className="text-sm sm:text-lg font-extrabold text-brand-primary uppercase tracking-wide leading-tight">
+              Sri Shakthi Institute of Engineering and Technology
+            </h1>
+            <p className="text-[11px] sm:text-xs font-semibold text-neutral-secondary mt-0.5">
+              Attendance Management System
             </p>
           </div>
-
-          <Button onClick={handleLogin} fullWidth>
-            Access Admin Panel
-          </Button>
         </div>
-      </Card>
-    </PageLayout>
+
+        <Card>
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-xl font-bold text-neutral-primary">
+                Admin Authentication
+              </h2>
+              <p className="text-sm text-neutral-secondary mt-1">
+                Secure access to attendance management system
+              </p>
+            </div>
+
+            <Input
+              label="Admin Code"
+              value={adminCode}
+              onChange={setAdminCode}
+              placeholder="Enter admin code"
+              required
+              error={error}
+              type="text"
+            />
+
+            <div className="bg-status-infoSoft border border-status-info p-3 rounded-2xl">
+              <p className="text-sm text-status-infoStrong">
+                <strong>Demo Codes:</strong> CSEADMIN, ITADMIN, ECEADMIN, MEADMIN, AIMLADMIN
+              </p>
+            </div>
+
+            <Button onClick={handleLogin} fullWidth>
+              Access Admin Panel
+            </Button>
+          </div>
+        </Card>
+      </div>
+    </main>
   );
 }

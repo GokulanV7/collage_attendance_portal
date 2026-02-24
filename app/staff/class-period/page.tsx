@@ -44,7 +44,7 @@ export default function StaffClassPeriod() {
     const dept = sessionStorage.getItem("selectedDepartment");
     const batch = sessionStorage.getItem("selectedBatch");
     if (!sessionStorage.getItem("staffName") || !batch || !dept) {
-      router.push("/staff/validate");
+      router.push("/");
       return;
     }
 

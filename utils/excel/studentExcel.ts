@@ -19,7 +19,6 @@ export interface ValidationResult {
 
 const VALID_BATCHES = ['2021-2025', '2022-2026', '2023-2027', '2024-2028', '2025-2029'];
 const VALID_DEPARTMENTS = ['CSE', 'IT', 'ECE', 'ME', 'AIML'];
-const VALID_CLASSES = ['Section A', 'Section B'];
 
 export const validateStudentRow = (row: Record<string, unknown>, rowIndex: number): ValidationResult => {
   const errors: string[] = [];
@@ -47,8 +46,8 @@ export const validateStudentRow = (row: Record<string, unknown>, rowIndex: numbe
 
   if (!row.class || String(row.class).trim() === '') {
     errors.push(`Row ${rowIndex + 1}: Class is required`);
-  } else if (!VALID_CLASSES.includes(String(row.class).trim())) {
-    errors.push(`Row ${rowIndex + 1}: Invalid class "${row.class}". Valid values: ${VALID_CLASSES.join(', ')}`);
+  } else if (!/^Section\s+[A-Z]$/i.test(String(row.class).trim())) {
+    errors.push(`Row ${rowIndex + 1}: Invalid class format "${row.class}". Expected format: "Section A", "Section B", "Section C", etc.`);
   }
 
   if (!row.semester || isNaN(Number(row.semester))) {
@@ -87,26 +86,55 @@ export const parseExcelFile = async (file: File): Promise<{
   data: ParsedStudentRow[];
   errors: string[];
 }> => {
+  const isCSV = file.name.toLowerCase().endsWith('.csv');
+
   return new Promise((resolve) => {
     const reader = new FileReader();
 
     reader.onload = (e) => {
       try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'array' });
-        
-        // Get first sheet
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        
-        // Convert to JSON
-        const jsonData = XLSX.utils.sheet_to_json(worksheet) as Record<string, unknown>[];
+        let jsonData: Record<string, unknown>[];
+
+        if (isCSV) {
+          // Parse CSV natively - strip BOM if present
+          let text = e.target?.result as string;
+          if (text.charCodeAt(0) === 0xFEFF) {
+            text = text.slice(1);
+          }
+          const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '');
+          
+          if (lines.length < 2) {
+            resolve({
+              success: false,
+              data: [],
+              errors: ['CSV file is empty or has no data rows'],
+            });
+            return;
+          }
+
+          const headers = lines[0].split(',').map((h) => h.trim());
+          jsonData = lines.slice(1).map((line) => {
+            const values = line.split(',').map((v) => v.trim());
+            const row: Record<string, unknown> = {};
+            headers.forEach((header, i) => {
+              row[header] = values[i] ?? '';
+            });
+            return row;
+          });
+        } else {
+          // Parse Excel with XLSX
+          const data = e.target?.result;
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          jsonData = XLSX.utils.sheet_to_json(worksheet) as Record<string, unknown>[];
+        }
 
         if (jsonData.length === 0) {
           resolve({
             success: false,
             data: [],
-            errors: ['Excel file is empty or has no data rows'],
+            errors: ['File is empty or has no data rows'],
           });
           return;
         }
@@ -143,7 +171,7 @@ export const parseExcelFile = async (file: File): Promise<{
         resolve({
           success: false,
           data: [],
-          errors: [`Failed to parse Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`],
+          errors: [`Failed to parse file: ${error instanceof Error ? error.message : 'Unknown error'}`],
         });
       }
     };
@@ -156,7 +184,11 @@ export const parseExcelFile = async (file: File): Promise<{
       });
     };
 
-    reader.readAsArrayBuffer(file);
+    if (isCSV) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsArrayBuffer(file);
+    }
   });
 };
 

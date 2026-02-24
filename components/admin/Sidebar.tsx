@@ -30,7 +30,7 @@ const menuItems = [
     ),
   },
   {
-    label: "Students",
+    label: "Manage Students",
     href: "/admin/students",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@ const menuItems = [
     ),
   },
   {
-    label: "Staff Report",
+    label: "Manage Staff",
     href: "/admin/staff-report",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

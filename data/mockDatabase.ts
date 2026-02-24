@@ -1,4 +1,4 @@
-import { Batch, Department, Student, Class, Subject } from "@/types";
+import { Batch, Department, Student, Class, Subject, AdminStudent } from "@/types";
 
 // Subjects by department
 const subjectsByDepartment: Record<string, Subject[]> = {
@@ -54,207 +54,42 @@ const subjectsByDepartment: Record<string, Subject[]> = {
   ],
 };
 
+// Department labels
+const departmentLabels: Record<string, string> = {
+  CSE: "Computer Science Engineering",
+  IT: "Information Technology",
+  ECE: "Electronics and Communication Engineering",
+  ME: "Mechanical Engineering",
+  AIML: "Artificial Intelligence & ML",
+};
+
+// Available batches and department IDs (structural config, not student data)
 export const batches: Batch[] = [
   { id: "2021-2025", name: "2021–2025" },
   { id: "2022-2026", name: "2022–2026" },
   { id: "2023-2027", name: "2023–2027" },
+  { id: "2024-2028", name: "2024–2028" },
+  { id: "2025-2029", name: "2025–2029" },
 ];
 
-const makeStudents = (
-  names: string[],
-  idPrefix: string,
-  rollPrefix: string,
-  startIndex = 1
-): Student[] => {
-  return names.map((name, idx) => {
-    const num = startIndex + idx;
-    const idNumber = num.toString().padStart(2, "0");
-    const rollNumber = num.toString().padStart(3, "0");
-    return {
-      id: `${idPrefix}${idNumber}`,
-      name,
-      rollNo: `${rollPrefix}${rollNumber}`,
-    };
-  });
+const DEPARTMENT_IDS = ["CSE", "IT", "ECE", "ME", "AIML"];
+
+// Helper: read real admin students from sessionStorage
+const getAdminStudents = (): AdminStudent[] => {
+  try {
+    if (typeof window === "undefined") return [];
+    const stored = sessionStorage.getItem("admin_students");
+    if (!stored) return [];
+    return JSON.parse(stored) as AdminStudent[];
+  } catch {
+    return [];
+  }
 };
 
-const departmentNameMap: Record<string, { a: string[]; b: string[]; label: string }> = {
-  CSE: {
-    label: "Computer Science Engineering",
-    a: [
-      "Aarav Sharma",
-      "Priya Nair",
-      "Ravi Patel",
-      "Sneha Reddy",
-      "Karthik Krishnan",
-      "Divya Menon",
-      "Vijay Singh",
-      "Lakshmi Iyer",
-      "Aditya Verma",
-      "Meera Das",
-    ],
-    b: [
-      "Suresh Babu",
-      "Anjali Desai",
-      "Rahul Gupta",
-      "Pooja Joshi",
-      "Manoj Kumar",
-      "Nithya Rao",
-      "Arjun Pillai",
-      "Kavya Shetty",
-      "Abhinav Sen",
-      "Tara Kulkarni",
-    ],
-  },
-  IT: {
-    label: "Information Technology",
-    a: [
-      "Prakash Reddy",
-      "Sanjana Murthy",
-      "Ganesh Rao",
-      "Bhavana Shetty",
-      "Ramesh Kumar",
-      "Shruti Jain",
-      "Varun Patel",
-      "Madhavi Reddy",
-      "Ritika Sharma",
-      "Naveen Iyer",
-    ],
-    b: [
-      "Santhosh Kumar",
-      "Anusha Iyer",
-      "Krishna Murthy",
-      "Preeti Sharma",
-      "Mohan Rao",
-      "Vasudha Menon",
-      "Charan Bhat",
-      "Nikita Singh",
-      "Harsha Gowda",
-      "Pavithra R",
-    ],
-  },
-  ECE: {
-    label: "Electronics and Communication Engineering",
-    a: [
-      "Sunil Kumar",
-      "Rekha Reddy",
-      "Akash Singh",
-      "Geeta Rao",
-      "Vinay Kumar",
-      "Sowmya Nair",
-      "Rajiv Arora",
-      "Mansi Gupta",
-      "Rohit Ahuja",
-      "Niharika Bose",
-    ],
-    b: [
-      "Ramesh Babu",
-      "Shilpa Rao",
-      "Naveen Kumar",
-      "Ashwini Reddy",
-      "Sahil Mehta",
-      "Pallavi Iyer",
-      "Dheeraj Singh",
-      "Ishita Sen",
-      "Jayant Kulkarni",
-      "Tanvi Deshpande",
-    ],
-  },
-  ME: {
-    label: "Mechanical Engineering",
-    a: [
-      "Rajesh Kumar",
-      "Deepa Shetty",
-      "Kishore Reddy",
-      "Uma Mahesh",
-      "Srinivas Rao",
-      "Anita Verma",
-      "Gautam Singh",
-      "Kiran Patil",
-      "Neeraj Jain",
-      "Pooja Kulkarni",
-    ],
-    b: [
-      "Lokesh Kumar",
-      "Pavitra Reddy",
-      "Chandrasekhar",
-      "Arvind Nair",
-      "Megha Sharma",
-      "Sridhar Babu",
-      "Yash Mehta",
-      "Devika Rao",
-      "Anand Pillai",
-      "Snehal Patil",
-    ],
-  },
-  AIML: {
-    label: "Artificial Intelligence & ML",
-    a: [
-      "Ishaan Malhotra",
-      "Diya Srinivasan",
-      "Kabir Mehta",
-      "Ridhi Agarwal",
-      "Samar Kulkarni",
-      "Nidhi Narayanan",
-      "Farhan Shaikh",
-      "Pari Deshmukh",
-      "Vivaan Rao",
-      "Sara Pinto",
-    ],
-    b: [
-      "Raghav Menon",
-      "Avni Kapoor",
-      "Kunal Sharma",
-      "Myra Fernandes",
-      "Aravind S",
-      "Tanisha Bhat",
-      "Dev Patel",
-      "Keya Banerjee",
-      "Ayaan Noor",
-      "Sia Mathew",
-    ],
-  },
-};
-
-const buildDepartment = (
-  deptId: string,
-  batchCode: string
-): Department => {
-  const nameSet = departmentNameMap[deptId];
-  const classA: Class = {
-    id: `${deptId}-A`,
-    name: "A",
-    students: makeStudents(nameSet.a, `${deptId}${batchCode}A`, `${batchCode}${deptId}`),
-  };
-
-  const classB: Class = {
-    id: `${deptId}-B`,
-    name: "B",
-    students: makeStudents(nameSet.b, `${deptId}${batchCode}B`, `${batchCode}${deptId}`, 11),
-  };
-
-  return {
-    id: deptId,
-    name: nameSet.label,
-    classes: [classA, classB],
-  };
-};
-
-const createBatchDepartments = (batchId: string): Department[] => {
-  const batchCode = batchId.slice(2, 4); // e.g., "2023-2027" -> "23"
-  return [
-    buildDepartment("CSE", batchCode),
-    buildDepartment("IT", batchCode),
-    buildDepartment("ECE", batchCode),
-    buildDepartment("ME", batchCode),
-    buildDepartment("AIML", batchCode),
-  ];
-};
-
-export const departmentsByBatch: Record<string, Department[]> = {
-  "2021-2025": createBatchDepartments("2021-2025"),
-  "2022-2026": createBatchDepartments("2022-2026"),
-  "2023-2027": createBatchDepartments("2023-2027"),
+// Map between class ID (e.g. CSE-A) and admin class name (e.g. Section A)
+const classIdToName = (classId: string): string => {
+  const letter = classId.split("-").pop();
+  return letter ? `Section ${letter}` : "";
 };
 
 export const getBatches = (): Batch[] => {
@@ -262,19 +97,46 @@ export const getBatches = (): Batch[] => {
 };
 
 export const getDepartments = (batchId?: string): Department[] => {
-  if (batchId && departmentsByBatch[batchId]) {
-    return departmentsByBatch[batchId];
-  }
-  return departmentsByBatch[batches[0].id] || [];
+  // Return department list with empty classes — classes are derived from real data
+  return DEPARTMENT_IDS.map((deptId) => ({
+    id: deptId,
+    name: departmentLabels[deptId] || deptId,
+    classes: getClassesByDepartment(batchId || "", deptId),
+  }));
 };
 
 export const getClassesByDepartment = (
   batchId: string,
   departmentId: string
 ): Class[] => {
-  const departments = getDepartments(batchId);
-  const department = departments.find((d) => d.id === departmentId);
-  return department?.classes || [];
+  // Derive classes dynamically from real uploaded students
+  const adminStudents = getAdminStudents();
+  const relevantStudents = adminStudents.filter(
+    (s) =>
+      s.batch === batchId &&
+      s.department.toUpperCase() === departmentId.toUpperCase()
+  );
+
+  // Extract unique class names (e.g. "Section A", "Section C")
+  const classNames = [...new Set(relevantStudents.map((s) => s.class))].sort();
+
+  if (classNames.length > 0) {
+    return classNames.map((className) => {
+      // Extract letter from "Section A" -> "A"
+      const letter = className.replace(/^Section\s+/i, "").toUpperCase();
+      return {
+        id: `${departmentId}-${letter}`,
+        name: letter,
+        students: [],
+      };
+    });
+  }
+
+  // Default: return A and B if no students uploaded yet
+  return [
+    { id: `${departmentId}-A`, name: "A", students: [] },
+    { id: `${departmentId}-B`, name: "B", students: [] },
+  ];
 };
 
 export const getStudentsByClass = (
@@ -282,14 +144,34 @@ export const getStudentsByClass = (
   departmentId: string,
   classId: string
 ): Student[] => {
-  const classes = getClassesByDepartment(batchId, departmentId);
-  const classData = classes.find((c) => c.id === classId);
-  return classData?.students || [];
+  const adminStudents = getAdminStudents();
+  const adminClassName = classIdToName(classId);
+
+  // Read semester from session if available
+  const selectedSemester =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("selectedSemester")
+      : null;
+
+  // Filter admin students by batch, department, class, and semester
+  const filtered = adminStudents.filter((s) => {
+    const matchBatch = s.batch === batchId;
+    const matchDept = s.department.toUpperCase() === departmentId.toUpperCase();
+    const matchClass = s.class === adminClassName;
+    const matchSemester = selectedSemester
+      ? s.semester === parseInt(selectedSemester)
+      : true;
+    return matchBatch && matchDept && matchClass && matchSemester;
+  });
+
+  // Convert AdminStudent to Student type
+  return filtered.map((s) => ({
+    id: s.id,
+    name: s.name,
+    rollNo: s.rollNo,
+  }));
 };
 
 export const getSubjectsByDepartment = (departmentId: string): Subject[] => {
   return subjectsByDepartment[departmentId] || [];
 };
-
-// Backwards compatibility export for any legacy imports
-export const departments = departmentsByBatch[batches[0].id];
