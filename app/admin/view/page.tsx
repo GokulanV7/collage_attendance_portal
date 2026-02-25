@@ -3,10 +3,13 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin";
 import { useAttendance } from "@/context/AttendanceContext";
-import { getBatches, getClassesByDepartment, getSubjectsByDepartment } from "@/data/mockDatabase";
+import { getBatches, getClassesByDepartment, getSubjectsByDepartment, getStudentsByClass } from "@/data/mockDatabase";
 import { Batch, Class, Subject } from "@/types";
 
 type View = "classes" | "subjects" | "attendance";
+
+// Normalize batch string: replace em-dash with hyphen for consistent comparison
+const normalizeBatch = (b: string): string => b.replace(/\u2013/g, "-");
 
 export default function AdminView() {
   const { submissions } = useAttendance();
@@ -43,8 +46,9 @@ export default function AdminView() {
 
   // Filter submissions for the currently selected context
   const contextSubmissions = useMemo(() => {
+    const normalizedBatch = normalizeBatch(selectedBatch);
     return submissions.filter((s) => {
-      if (s.batch !== selectedBatch) return false;
+      if (normalizeBatch(s.batch) !== normalizedBatch) return false;
       if (s.department !== adminDeptName) return false;
       if (selectedClass && s.class !== selectedClass.name) return false;
       if (selectedSubject && s.subject !== selectedSubject.name) return false;
@@ -52,59 +56,84 @@ export default function AdminView() {
     });
   }, [submissions, selectedBatch, adminDeptName, selectedClass, selectedSubject]);
 
-  // For classes view: count submissions per class
+  // For classes view: count periods per class
   const classStats = useMemo(() => {
+    const normalizedBatch = normalizeBatch(selectedBatch);
     const map = new Map<string, { sessions: number; totalRecords: number; presentCount: number }>();
     submissions
-      .filter((s) => s.batch === selectedBatch && s.department === adminDeptName)
+      .filter((s) => normalizeBatch(s.batch) === normalizedBatch && s.department === adminDeptName)
       .forEach((s) => {
         const cur = map.get(s.class) || { sessions: 0, totalRecords: 0, presentCount: 0 };
-        cur.sessions += 1;
+        const periodCount = s.periods.length || 1;
+        cur.sessions += periodCount;
         s.attendance.forEach((a) => {
-          cur.totalRecords += 1;
-          if (a.status === "Present" || a.status === "On-Duty") cur.presentCount += 1;
+          cur.totalRecords += periodCount;
+          if (a.status === "Present" || a.status === "On-Duty") cur.presentCount += periodCount;
         });
         map.set(s.class, cur);
       });
     return map;
   }, [submissions, selectedBatch, adminDeptName]);
 
-  // For subjects view: count submissions per subject for selected class
+  // For subjects view: count periods per subject for selected class
   const subjectStats = useMemo(() => {
     if (!selectedClass) return new Map<string, { sessions: number; totalRecords: number; presentCount: number }>();
+    const normalizedBatch = normalizeBatch(selectedBatch);
     const map = new Map<string, { sessions: number; totalRecords: number; presentCount: number }>();
     submissions
-      .filter((s) => s.batch === selectedBatch && s.department === adminDeptName && s.class === selectedClass.name)
+      .filter((s) => normalizeBatch(s.batch) === normalizedBatch && s.department === adminDeptName && s.class === selectedClass.name)
       .forEach((s) => {
         const cur = map.get(s.subject) || { sessions: 0, totalRecords: 0, presentCount: 0 };
-        cur.sessions += 1;
+        const periodCount = s.periods.length || 1;
+        cur.sessions += periodCount;
         s.attendance.forEach((a) => {
-          cur.totalRecords += 1;
-          if (a.status === "Present" || a.status === "On-Duty") cur.presentCount += 1;
+          cur.totalRecords += periodCount;
+          if (a.status === "Present" || a.status === "On-Duty") cur.presentCount += periodCount;
         });
         map.set(s.subject, cur);
       });
     return map;
   }, [submissions, selectedBatch, adminDeptName, selectedClass]);
 
-  // For attendance view: per-student stats
+  // For attendance view: per-student stats (includes ALL students in the class)
   const studentAttendanceData = useMemo(() => {
-    if (!selectedClass || !selectedSubject) return [];
-    const map = new Map<string, { name: string; rollNo: string; present: number; absent: number; onDuty: number; total: number }>();
+    if (!selectedClass || !selectedSubject || !adminDeptId || !selectedBatch) return [];
+
+    // Get all students from the class
+    const allStudents = getStudentsByClass(selectedBatch, adminDeptId, selectedClass.id);
+
+    // Build attendance map from submissions
+    // Each submission covers N periods, so multiply counts by the number of periods
+    const attendanceMap = new Map<string, { name: string; rollNo: string; present: number; absent: number; onDuty: number; total: number }>();
 
     contextSubmissions.forEach((s) => {
+      const periodCount = s.periods.length || 1;
       s.attendance.forEach((a) => {
-        const cur = map.get(a.rollNo) || { name: a.studentName, rollNo: a.rollNo, present: 0, absent: 0, onDuty: 0, total: 0 };
-        cur.total += 1;
-        if (a.status === "Present") cur.present += 1;
-        else if (a.status === "Absent") cur.absent += 1;
-        else if (a.status === "On-Duty") cur.onDuty += 1;
-        map.set(a.rollNo, cur);
+        const cur = attendanceMap.get(a.rollNo) || { name: a.studentName, rollNo: a.rollNo, present: 0, absent: 0, onDuty: 0, total: 0 };
+        cur.total += periodCount;
+        if (a.status === "Present") cur.present += periodCount;
+        else if (a.status === "Absent") cur.absent += periodCount;
+        else if (a.status === "On-Duty") cur.onDuty += periodCount;
+        attendanceMap.set(a.rollNo, cur);
       });
     });
 
-    return Array.from(map.values()).sort((a, b) => a.rollNo.localeCompare(b.rollNo));
-  }, [contextSubmissions, selectedClass, selectedSubject]);
+    // Merge: include all students from class, filling in zeros for those without attendance records
+    const merged = allStudents.map((student) => {
+      const record = attendanceMap.get(student.rollNo);
+      if (record) return record;
+      return { name: student.name, rollNo: student.rollNo, present: 0, absent: 0, onDuty: 0, total: 0 };
+    });
+
+    // Also add any students from attendance records that aren't in the current class list (edge case)
+    attendanceMap.forEach((record, rollNo) => {
+      if (!allStudents.find((s) => s.rollNo === rollNo)) {
+        merged.push(record);
+      }
+    });
+
+    return merged.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
+  }, [contextSubmissions, selectedClass, selectedSubject, adminDeptId, selectedBatch]);
 
   const filteredStudents = useMemo(() => {
     if (!searchQuery) return studentAttendanceData;
@@ -384,7 +413,7 @@ export default function AdminView() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {(() => {
                 const totalStudents = studentAttendanceData.length;
-                const totalSessions = contextSubmissions.length;
+                const totalSessions = contextSubmissions.reduce((sum, s) => sum + (s.periods.length || 1), 0);
                 const avgPct = totalStudents > 0
                   ? studentAttendanceData.reduce((sum, s) => sum + (s.total > 0 ? (s.present + s.onDuty) / s.total * 100 : 0), 0) / totalStudents
                   : 0;

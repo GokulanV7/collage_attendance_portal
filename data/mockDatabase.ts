@@ -105,6 +105,19 @@ export const getDepartments = (batchId?: string): Department[] => {
   }));
 };
 
+// Helper: read manually created class names from sessionStorage
+const getCreatedClassNames = (batchId: string, departmentId: string): string[] => {
+  try {
+    if (typeof window === "undefined") return [];
+    const stored = sessionStorage.getItem("admin_class_names");
+    if (!stored) return [];
+    const all = JSON.parse(stored) as Record<string, string[]>;
+    return all[`${batchId}_${departmentId}`] || [];
+  } catch {
+    return [];
+  }
+};
+
 export const getClassesByDepartment = (
   batchId: string,
   departmentId: string
@@ -117,11 +130,17 @@ export const getClassesByDepartment = (
       s.department.toUpperCase() === departmentId.toUpperCase()
   );
 
-  // Extract unique class names (e.g. "Section A", "Section C")
-  const classNames = [...new Set(relevantStudents.map((s) => s.class))].sort();
+  // Extract unique class names from students (e.g. "Section A", "Section C")
+  const studentClassNames = [...new Set(relevantStudents.map((s) => s.class))];
 
-  if (classNames.length > 0) {
-    return classNames.map((className) => {
+  // Also include manually created classes from admin_class_names
+  const createdClassNames = getCreatedClassNames(batchId, departmentId);
+
+  // Merge both sources and include the default "Section A"
+  const allClassNames = [...new Set(["Section A", ...studentClassNames, ...createdClassNames])].sort();
+
+  if (allClassNames.length > 0) {
+    return allClassNames.map((className) => {
       // Extract letter from "Section A" -> "A"
       const letter = className.replace(/^Section\s+/i, "").toUpperCase();
       return {
@@ -145,7 +164,8 @@ export const getStudentsByClass = (
   classId: string
 ): Student[] => {
   const adminStudents = getAdminStudents();
-  const adminClassName = classIdToName(classId);
+  const adminClassName = classIdToName(classId); // e.g. "Section A"
+  const classLetter = classId.split("-").pop()?.toUpperCase() || "";
 
   // Read semester from session if available
   const selectedSemester =
@@ -157,7 +177,12 @@ export const getStudentsByClass = (
   const filtered = adminStudents.filter((s) => {
     const matchBatch = s.batch === batchId;
     const matchDept = s.department.toUpperCase() === departmentId.toUpperCase();
-    const matchClass = s.class === adminClassName;
+    // Match class: support both "Section A" and just the letter
+    const sClassUpper = s.class.toUpperCase();
+    const matchClass =
+      s.class === adminClassName ||
+      sClassUpper === classLetter ||
+      sClassUpper === `SECTION ${classLetter}`;
     const matchSemester = selectedSemester
       ? s.semester === parseInt(selectedSemester)
       : true;

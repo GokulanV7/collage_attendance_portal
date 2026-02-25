@@ -9,6 +9,8 @@ interface ExcelUploadModalProps {
   onClose: () => void;
   onSuccess: (message: string) => void;
   adminDept?: string | null;
+  prefillBatch?: string;
+  prefillClass?: string;
 }
 
 type UploadStep = 'upload' | 'preview' | 'result';
@@ -18,6 +20,8 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
   onClose,
   onSuccess,
   adminDept,
+  prefillBatch,
+  prefillClass,
 }) => {
   const { bulkAddStudents, students } = useStudents();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,13 +57,20 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
     }
 
     if (data.length > 0) {
-      // Filter by admin department if restricted
-      let filteredData = data;
+      // If opened from a specific class context, override batch/class/department
+      let filteredData = data.map((row) => ({
+        ...row,
+        batch: prefillBatch || row.batch,
+        class: prefillClass || row.class,
+        department: (isRestrictedAdmin && adminDept) ? adminDept : row.department,
+      }));
+
+      // Filter by admin department if restricted (and no prefill override)
       let wrongDeptCount = 0;
-      
       if (isRestrictedAdmin && adminDept) {
-        filteredData = data.filter((row) => row.department.toUpperCase() === adminDept.toUpperCase());
-        wrongDeptCount = data.length - filteredData.length;
+        const beforeCount = filteredData.length;
+        filteredData = filteredData.filter((row) => row.department.toUpperCase() === adminDept.toUpperCase());
+        wrongDeptCount = beforeCount - filteredData.length;
         
         if (wrongDeptCount > 0) {
           setParseErrors((prev) => [
@@ -298,6 +309,23 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
                     ← Upload Different File
                   </button>
                 </div>
+
+                {/* Info banner when batch/class is being overridden */}
+                {(prefillBatch || prefillClass) && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">
+                      ℹ️ All students will be added to{' '}
+                      <span className="font-semibold">{prefillClass || 'selected class'}</span>
+                      {prefillBatch && (
+                        <>, batch <span className="font-semibold">{prefillBatch}</span></>
+                      )}
+                      {adminDept && (
+                        <>, {adminDept}</>
+                      )}
+                      .
+                    </p>
+                  </div>
+                )}
 
                 {/* Errors warning */}
                 {parseErrors.length > 0 && (

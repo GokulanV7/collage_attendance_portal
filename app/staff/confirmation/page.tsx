@@ -83,7 +83,7 @@ export default function StaffConfirmation() {
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-secondary">Date:</span>
-              <span className="font-medium">{submission.date}</span>
+              <span className="font-medium">{(() => { const d = new Date(submission.date + "T00:00:00"); return isNaN(d.getTime()) ? submission.date : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); })()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-secondary">Time:</span>

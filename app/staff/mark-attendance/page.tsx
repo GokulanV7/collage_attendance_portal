@@ -143,7 +143,7 @@ export default function StaffMarkAttendance() {
         subject: contextInfo.subject,
         subjectCode: contextInfo.subjectCode,
         periods: contextInfo.periods,
-        date: now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        date: now.toISOString().split("T")[0],
         time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
         staffId,
         staffName,

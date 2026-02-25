@@ -28,11 +28,12 @@ interface AddStudentModalProps {
   adminDept?: string | null;
   prefillBatch?: string;
   prefillClass?: string;
+  availableClasses?: string[];
 }
 
 const BATCHES = ['2021-2025', '2022-2026', '2023-2027', '2024-2028', '2025-2029'];
 const DEPARTMENTS = ['CSE', 'IT', 'ECE', 'ME', 'AIML'];
-const CLASSES = ['Section A', 'Section B'];
+const DEFAULT_CLASSES = ['Section A', 'Section B'];
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 export const AddStudentModal: React.FC<AddStudentModalProps> = ({
@@ -43,6 +44,7 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
   adminDept,
   prefillBatch,
   prefillClass,
+  availableClasses,
 }) => {
   const { addStudent, updateStudent, isRollNoUnique } = useStudents();
   
@@ -285,13 +287,16 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
                   } ${hasPrefillClass && !editStudent ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 >
                   <option value="">Select Class</option>
-                  {CLASSES.map((cls) => (
+                  {(availableClasses && availableClasses.length > 0
+                    ? [...new Set([...DEFAULT_CLASSES, ...availableClasses])].sort()
+                    : DEFAULT_CLASSES
+                  ).map((cls) => (
                     <option key={cls} value={cls}>
                       {cls}
                     </option>
                   ))}
-                  {/* Include the prefilled class if not in CLASSES */}
-                  {prefillClass && !CLASSES.includes(prefillClass) && (
+                  {/* Include the prefilled class if not already listed */}
+                  {prefillClass && !DEFAULT_CLASSES.includes(prefillClass) && !(availableClasses || []).includes(prefillClass) && (
                     <option key={prefillClass} value={prefillClass}>
                       {prefillClass}
                     </option>

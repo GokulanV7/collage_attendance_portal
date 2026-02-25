@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { Card } from "@/components/Card";
+import { Navbar } from "@/components/Navbar";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -49,28 +49,13 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-brand-background flex flex-col items-center justify-center px-3 py-4 sm:px-8 sm:py-10">
-      <div className="w-full max-w-md space-y-6">
-        {/* College Logo & Name */}
-        <div className="flex flex-col items-center text-center space-y-2">
-          <Image
-            src="/College%20Logo.png"
-            width={80}
-            height={80}
-            alt="Sri Shakthi Institute logo"
-            className="h-16 w-16 sm:h-20 sm:w-20 object-contain"
-            priority
-          />
-          <div>
-            <h1 className="text-sm sm:text-lg font-extrabold text-brand-primary uppercase tracking-wide leading-tight">
-              Sri Shakthi Institute of Engineering and Technology
-            </h1>
-            <p className="text-[11px] sm:text-xs font-semibold text-neutral-secondary mt-0.5">
-              Attendance Management System
-            </p>
-          </div>
-        </div>
+    <main className="min-h-screen bg-brand-background flex flex-col items-center px-3 py-0 sm:px-8 sm:py-0">
+      {/* College Header Banner - Fixed at top */}
+      <div className="w-full sticky top-0 z-10 pt-3 sm:pt-4 pb-2 bg-brand-background">
+        <Navbar />
+      </div>
 
+      <div className="w-full max-w-md space-y-6 flex-1 flex flex-col justify-center py-4 sm:py-6">
         {isLoading && <LoadingSpinner message="Validating Staff ID..." />}
         <Card>
           <div className="space-y-6">

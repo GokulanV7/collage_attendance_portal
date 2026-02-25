@@ -668,6 +668,7 @@ export default function StudentsPage() {
           adminDept={adminDept}
           prefillBatch={selectedBatch}
           prefillClass={selectedClass || undefined}
+          availableClasses={classNames}
         />
 
         <ExcelUploadModal
@@ -675,6 +676,8 @@ export default function StudentsPage() {
           onClose={() => setShowUploadModal(false)}
           onSuccess={showToast}
           adminDept={adminDept}
+          prefillBatch={selectedBatch}
+          prefillClass={selectedClass || undefined}
         />
 
         <DeleteConfirmModal
