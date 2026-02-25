@@ -50,7 +50,7 @@ export default function StaffMarkAttendance() {
     const savedStaffName = sessionStorage.getItem("staffName");
 
     if (!staffId || !batch || !dept || !classId || !periodDuration || !periodStart || !periodEnd) {
-      router.push("/staff/validate");
+      router.push("/");
       return;
     }
 
@@ -143,7 +143,7 @@ export default function StaffMarkAttendance() {
         subject: contextInfo.subject,
         subjectCode: contextInfo.subjectCode,
         periods: contextInfo.periods,
-        date: now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        date: now.toISOString().split("T")[0],
         time: now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }),
         staffId,
         staffName,
@@ -241,23 +241,38 @@ export default function StaffMarkAttendance() {
       </Card>
 
       {/* Student List */}
-      <div className="space-y-3 mb-4">
-        {students.map((student) => (
-          <Card key={student.id}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                <h3 className="text-base font-bold text-neutral-primary">{student.name}</h3>
-                <p className="font-mono text-sm font-semibold text-neutral-secondary shrink-0">{student.rollNo}</p>
+      {students.length === 0 ? (
+        <Card>
+          <div className="text-center py-8">
+            <svg className="w-16 h-16 mx-auto text-neutral-secondary/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <h3 className="text-lg font-semibold text-neutral-primary mb-2">No Students Found</h3>
+            <p className="text-neutral-secondary text-sm max-w-md mx-auto">
+              No students have been uploaded for this batch, department, class and semester combination yet. 
+              Please ask the admin to upload student data first.
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-3 mb-4">
+          {students.map((student) => (
+            <Card key={student.id}>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                  <h3 className="text-base font-bold text-neutral-primary">{student.name}</h3>
+                  <p className="font-mono text-sm font-semibold text-neutral-secondary shrink-0">{student.rollNo}</p>
+                </div>
+                <RadioGroup
+                  value={attendanceMap.get(student.id) || "Present"}
+                  onChange={(status) => handleStatusChange(student.id, status)}
+                  options={attendanceOptions}
+                />
               </div>
-              <RadioGroup
-                value={attendanceMap.get(student.id) || "Present"}
-                onChange={(status) => handleStatusChange(student.id, status)}
-                options={attendanceOptions}
-              />
-            </div>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Submit Button */}
       <div className="sticky bottom-0 bg-brand-background p-4 border-t border-neutral-border">

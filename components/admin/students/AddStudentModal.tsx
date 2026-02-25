@@ -26,11 +26,14 @@ interface AddStudentModalProps {
   onSuccess: (message: string) => void;
   editStudent?: AdminStudent | null;
   adminDept?: string | null;
+  prefillBatch?: string;
+  prefillClass?: string;
+  availableClasses?: string[];
 }
 
 const BATCHES = ['2021-2025', '2022-2026', '2023-2027', '2024-2028', '2025-2029'];
 const DEPARTMENTS = ['CSE', 'IT', 'ECE', 'ME', 'AIML'];
-const CLASSES = ['Section A', 'Section B'];
+const DEFAULT_CLASSES = ['Section A', 'Section B'];
 const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 export const AddStudentModal: React.FC<AddStudentModalProps> = ({
@@ -39,12 +42,19 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
   onSuccess,
   editStudent,
   adminDept,
+  prefillBatch,
+  prefillClass,
+  availableClasses,
 }) => {
   const { addStudent, updateStudent, isRollNoUnique } = useStudents();
   
   // Check if admin is restricted to a specific department
   const isRestrictedAdmin = Boolean(adminDept && adminDept !== 'Overall');
   const allowedDepartments = isRestrictedAdmin ? [adminDept!] : DEPARTMENTS;
+
+  // Check if batch/class are pre-filled (opened from class context)
+  const hasPrefillBatch = Boolean(prefillBatch);
+  const hasPrefillClass = Boolean(prefillClass);
   
   const {
     register,
@@ -68,9 +78,9 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
       : {
           name: '',
           rollNo: '',
-          batch: '',
+          batch: prefillBatch || '',
           department: isRestrictedAdmin && adminDept ? adminDept : '',
-          class: '',
+          class: prefillClass || '',
           semester: 1,
           email: '',
           phone: '',
@@ -93,15 +103,15 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
       reset({
         name: '',
         rollNo: '',
-        batch: '',
+        batch: prefillBatch || '',
         department: isRestrictedAdmin && adminDept ? adminDept : '',
-        class: '',
+        class: prefillClass || '',
         semester: 1,
         email: '',
         phone: '',
       });
     }
-  }, [editStudent, reset, isRestrictedAdmin, adminDept]);
+  }, [editStudent, reset, isRestrictedAdmin, adminDept, prefillBatch, prefillClass]);
 
   const onSubmit = async (data: StudentFormData) => {
     // Check roll number uniqueness
@@ -219,9 +229,10 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
                 </label>
                 <select
                   {...register('batch')}
+                  disabled={hasPrefillBatch && !editStudent}
                   className={`w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                     errors.batch ? 'border-red-500' : 'border-gray-200'
-                  }`}
+                  } ${hasPrefillBatch && !editStudent ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 >
                   <option value="">Select Batch</option>
                   {BATCHES.map((batch) => (
@@ -270,16 +281,26 @@ export const AddStudentModal: React.FC<AddStudentModalProps> = ({
                 </label>
                 <select
                   {...register('class')}
+                  disabled={hasPrefillClass && !editStudent}
                   className={`w-full px-3 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                     errors.class ? 'border-red-500' : 'border-gray-200'
-                  }`}
+                  } ${hasPrefillClass && !editStudent ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 >
                   <option value="">Select Class</option>
-                  {CLASSES.map((cls) => (
+                  {(availableClasses && availableClasses.length > 0
+                    ? [...new Set([...DEFAULT_CLASSES, ...availableClasses])].sort()
+                    : DEFAULT_CLASSES
+                  ).map((cls) => (
                     <option key={cls} value={cls}>
                       {cls}
                     </option>
                   ))}
+                  {/* Include the prefilled class if not already listed */}
+                  {prefillClass && !DEFAULT_CLASSES.includes(prefillClass) && !(availableClasses || []).includes(prefillClass) && (
+                    <option key={prefillClass} value={prefillClass}>
+                      {prefillClass}
+                    </option>
+                  )}
                 </select>
                 {errors.class && (
                   <p className="mt-1 text-sm text-red-500">{errors.class.message}</p>

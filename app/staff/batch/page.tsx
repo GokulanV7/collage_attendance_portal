@@ -23,7 +23,7 @@ export default function StaffBatch() {
   useEffect(() => {
     const name = sessionStorage.getItem("staffName");
     if (!name) {
-      router.push("/staff/validate");
+      router.push("/");
       return;
     }
     setStaffName(name);

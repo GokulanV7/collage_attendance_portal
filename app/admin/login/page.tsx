@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PageLayout } from "@/components/PageLayout";
 import { Card } from "@/components/Card";
+import { Navbar } from "@/components/Navbar";
 import { Input } from "@/components/Input";
 import { Button } from "@/components/Button";
 
@@ -42,42 +42,46 @@ export default function AdminLogin() {
   };
 
   return (
-    <PageLayout
-      title="Admin Portal"
-      subtitle="Enter admin code to access attendance records"
-    >
-      <Card className="max-w-md mx-auto">
-        <div className="space-y-6">
-          <div className="text-center">
-            <h2 className="text-lg font-semibold text-neutral-primary">
-              Admin Authentication
-            </h2>
-            <p className="text-sm text-neutral-secondary mt-1">
-              Secure access to attendance management system
-            </p>
+    <main className="min-h-screen bg-brand-background flex flex-col items-center px-3 py-0 sm:px-8 sm:py-0">
+      {/* College Header Banner - Fixed at top */}
+      <div className="w-full sticky top-0 z-10 pt-3 sm:pt-4 pb-2 bg-brand-background">
+        <Navbar />
+      </div>
+
+      <div className="w-full max-w-md space-y-6 flex-1 flex flex-col justify-center py-4 sm:py-6">
+        <Card>
+          <div className="space-y-6">
+            <div className="text-center">
+              <h2 className="text-xl font-bold text-neutral-primary">
+                Admin Authentication
+              </h2>
+              <p className="text-sm text-neutral-secondary mt-1">
+                Secure access to attendance management system
+              </p>
+            </div>
+
+            <Input
+              label="Admin Code"
+              value={adminCode}
+              onChange={setAdminCode}
+              placeholder="Enter admin code"
+              required
+              error={error}
+              type="text"
+            />
+
+            <div className="bg-status-infoSoft border border-status-info p-3 rounded-2xl">
+              <p className="text-sm text-status-infoStrong">
+                <strong>Demo Codes:</strong> CSEADMIN, ITADMIN, ECEADMIN, MEADMIN, AIMLADMIN
+              </p>
+            </div>
+
+            <Button onClick={handleLogin} fullWidth>
+              Access Admin Panel
+            </Button>
           </div>
-
-          <Input
-            label="Admin Code"
-            value={adminCode}
-            onChange={setAdminCode}
-            placeholder="Enter admin code"
-            required
-            error={error}
-            type="text"
-          />
-
-          <div className="bg-status-infoSoft border border-status-info p-3 rounded-2xl">
-            <p className="text-sm text-status-infoStrong">
-              <strong>Demo Codes:</strong> CSEADMIN, ITADMIN, ECEADMIN, MEADMIN, AIMLADMIN
-            </p>
-          </div>
-
-          <Button onClick={handleLogin} fullWidth>
-            Access Admin Panel
-          </Button>
-        </div>
-      </Card>
-    </PageLayout>
+        </Card>
+      </div>
+    </main>
   );
 }

@@ -83,7 +83,7 @@ export default function StaffConfirmation() {
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-secondary">Date:</span>
-              <span className="font-medium">{submission.date}</span>
+              <span className="font-medium">{(() => { const d = new Date(submission.date + "T00:00:00"); return isNaN(d.getTime()) ? submission.date : d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }); })()}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-neutral-secondary">Time:</span>
@@ -160,12 +160,9 @@ export default function StaffConfirmation() {
         )}
 
         {/* Actions */}
-        <div className="mt-8 flex gap-3">
-          <Link href="/staff/validate" className="flex-1">
+        <div className="mt-8">
+          <Link href="/">
             <Button fullWidth>Mark New Attendance</Button>
-          </Link>
-          <Link href="/" className="flex-1">
-            <Button variant="secondary" fullWidth>Back to Home</Button>
           </Link>
         </div>
       </Card>
