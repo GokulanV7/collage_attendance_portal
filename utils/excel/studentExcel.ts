@@ -59,6 +59,43 @@ export const validateStudentRow = (row: Record<string, unknown>, rowIndex: numbe
     }
   }
 
+  // Roll No format validation (batch start year + department code + unique number)
+  // Example: batch 2023-2027 + dept CSE => rollNo 23CS004
+  if (row.rollNo && row.batch && row.department) {
+    const rollNo = String(row.rollNo).trim().toUpperCase();
+    const batch = String(row.batch).trim();
+    const department = String(row.department).trim().toUpperCase();
+
+    const deptCodeMap: Record<string, string> = {
+      CSE: 'CS',
+      IT: 'IT',
+      ECE: 'EC',
+      ME: 'ME',
+      AIML: 'AI',
+    };
+
+    const expectedDeptCode = deptCodeMap[department];
+    const startYear = batch.split('-')[0];
+    const expectedYearPrefix = /^\d{4}$/.test(startYear) ? startYear.slice(-2) : null;
+
+    if (expectedYearPrefix && expectedDeptCode) {
+      const expectedPrefix = `${expectedYearPrefix}${expectedDeptCode}`;
+
+      if (!rollNo.startsWith(expectedPrefix)) {
+        errors.push(
+          `Row ${rowIndex + 1}: Roll Number must start with "${expectedPrefix}" for batch ${batch} and dept ${department}`
+        );
+      } else {
+        const suffix = rollNo.slice(expectedPrefix.length);
+        if (!/^\d{3,4}$/.test(suffix)) {
+          errors.push(
+            `Row ${rowIndex + 1}: Roll Number must be in format "${expectedPrefix}###" (last part should be 3-4 digits)`
+          );
+        }
+      }
+    }
+  }
+
   // Email validation (optional)
   if (row.email && String(row.email).trim() !== '') {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

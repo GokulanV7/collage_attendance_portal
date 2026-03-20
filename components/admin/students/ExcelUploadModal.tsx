@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStudents } from '@/context/StudentsContext';
 import { parseExcelFile, ParsedStudentRow } from '@/utils/excel/studentExcel';
+import { safeSessionStorage } from '@/utils/safeSessionStorage';
 
 interface ExcelUploadModalProps {
   isOpen: boolean;
@@ -25,6 +26,8 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
 }) => {
   const { bulkAddStudents, students } = useStudents();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const STUDENTS_STORAGE_KEY = 'admin_students';
   
   // Check if admin is restricted to a specific department
   const isRestrictedAdmin = Boolean(adminDept && adminDept !== 'Overall');
@@ -57,13 +60,8 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
     }
 
     if (data.length > 0) {
-      // If opened from a specific class context, override batch/class/department
-      let filteredData = data.map((row) => ({
-        ...row,
-        batch: prefillBatch || row.batch,
-        class: prefillClass || row.class,
-        department: (isRestrictedAdmin && adminDept) ? adminDept : row.department,
-      }));
+      // Preserve uploaded file data as-is (no automatic batch/class/department overrides)
+      let filteredData = data;
 
       // Filter by admin department if restricted (and no prefill override)
       let wrongDeptCount = 0;
@@ -81,27 +79,56 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
       }
       
       // Check for duplicates with existing students
-      const existingRollNos = new Set(students.map((s) => s.rollNo.toLowerCase()));
-      const localDuplicates: string[] = [];
-      const newRollNos = new Set<string>();
+      const storedStudents = safeSessionStorage.getJSON(STUDENTS_STORAGE_KEY, students);
+      const existingRollNos = new Set(storedStudents.map((s: { rollNo: string }) => s.rollNo.toLowerCase()));
+
+      const duplicateInFile = new Set<string>();
+      const duplicateAlreadyRegistered = new Set<string>();
+      const seenInFile = new Set<string>();
+      const uniqueRows: ParsedStudentRow[] = [];
 
       filteredData.forEach((row) => {
         const rollNoLower = row.rollNo.toLowerCase();
-        if (existingRollNos.has(rollNoLower) || newRollNos.has(rollNoLower)) {
-          localDuplicates.push(row.rollNo);
-        } else {
-          newRollNos.add(rollNoLower);
+        if (existingRollNos.has(rollNoLower)) {
+          duplicateAlreadyRegistered.add(row.rollNo);
+          return;
         }
+        if (seenInFile.has(rollNoLower)) {
+          duplicateInFile.add(row.rollNo);
+          return;
+        }
+        seenInFile.add(rollNoLower);
+        uniqueRows.push(row);
       });
 
-      if (localDuplicates.length > 0) {
-        setParseErrors((prev) => [
-          ...prev,
-          `Found ${localDuplicates.length} duplicate roll numbers: ${localDuplicates.slice(0, 5).join(', ')}${localDuplicates.length > 5 ? '...' : ''}`,
-        ]);
+      const duplicateMessages: string[] = [];
+      if (duplicateAlreadyRegistered.size > 0) {
+        const examples = Array.from(duplicateAlreadyRegistered).slice(0, 10);
+        duplicateMessages.push(
+          `Skipped ${duplicateAlreadyRegistered.size} rows: roll numbers already registered. Examples: ${examples.join(', ')}${duplicateAlreadyRegistered.size > 10 ? '...' : ''}`
+        );
+      }
+      if (duplicateInFile.size > 0) {
+        const examples = Array.from(duplicateInFile).slice(0, 10);
+        duplicateMessages.push(
+          `Skipped ${duplicateInFile.size} rows: duplicate roll numbers inside the file. Examples: ${examples.join(', ')}${duplicateInFile.size > 10 ? '...' : ''}`
+        );
       }
 
-      setParsedData(filteredData);
+      if (duplicateMessages.length > 0) {
+        setParseErrors((prev) => [...prev, ...duplicateMessages]);
+      }
+
+      if (uniqueRows.length === 0) {
+        setParsedData([]);
+        setStep('upload');
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+
+      setParsedData(uniqueRows);
       setStep('preview');
     } else if (!success) {
       // Reset file input
@@ -311,21 +338,7 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
                 </div>
 
                 {/* Info banner when batch/class is being overridden */}
-                {(prefillBatch || prefillClass) && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
-                      ℹ️ All students will be added to{' '}
-                      <span className="font-semibold">{prefillClass || 'selected class'}</span>
-                      {prefillBatch && (
-                        <>, batch <span className="font-semibold">{prefillBatch}</span></>
-                      )}
-                      {adminDept && (
-                        <>, {adminDept}</>
-                      )}
-                      .
-                    </p>
-                  </div>
-                )}
+
 
                 {/* Errors warning */}
                 {parseErrors.length > 0 && (
@@ -343,29 +356,33 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
 
                 {/* Preview Table */}
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <div className="max-h-80 overflow-y-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-gray-50 sticky top-0">
+                  <div className="max-h-80 overflow-x-auto overflow-y-auto">
+                    <table className="w-full min-w-max text-sm">
+                      <thead className="bg-gray-50 sticky top-0 z-10">
                         <tr>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">#</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Name</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Roll No</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Batch</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Dept</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Class</th>
-                          <th className="px-4 py-3 text-left font-semibold text-gray-600">Sem</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">#</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Name</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Roll No</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Batch</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Dept</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Class</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Sem</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Email</th>
+                          <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Phone</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {parsedData.map((row, idx) => (
                           <tr key={idx} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-gray-400">{idx + 1}</td>
-                            <td className="px-4 py-3 font-medium text-gray-900">{row.name}</td>
-                            <td className="px-4 py-3 text-gray-600">{row.rollNo}</td>
-                            <td className="px-4 py-3 text-gray-600">{row.batch}</td>
-                            <td className="px-4 py-3 text-gray-600">{row.department}</td>
-                            <td className="px-4 py-3 text-gray-600">{row.class}</td>
-                            <td className="px-4 py-3 text-gray-600">{row.semester}</td>
+                            <td className="px-4 py-3 text-gray-400 whitespace-nowrap">{idx + 1}</td>
+                            <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{row.name}</td>
+                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{row.rollNo}</td>
+                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{row.batch}</td>
+                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{row.department}</td>
+                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{row.class}</td>
+                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{row.semester}</td>
+                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{row.email || '-'}</td>
+                            <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{row.phone || '-'}</td>
                           </tr>
                         ))}
                       </tbody>
