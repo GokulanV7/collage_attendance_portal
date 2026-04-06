@@ -230,15 +230,13 @@ export default function QuickMarkAttendancePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           {/* Batch Selection */}
           <div>
-            <label className="block text-sm font-semibold text-neutral-primary mb-2">
-              Batch
-            </label>
             <Select
+              label="Batch"
               value={batch}
               onChange={setBatch}
               options={getBatches().map((b) => ({
-                value: b.id,
-                label: b.name,
+                id: b.id,
+                name: b.name,
               }))}
               placeholder="Select Batch"
             />
@@ -246,15 +244,13 @@ export default function QuickMarkAttendancePage() {
 
           {/* Department Selection */}
           <div>
-            <label className="block text-sm font-semibold text-neutral-primary mb-2">
-              Department
-            </label>
             <Select
+              label="Department"
               value={department}
               onChange={setDepartment}
               options={getDepartments(batch).map((d) => ({
-                value: d.id,
-                label: d.name,
+                id: d.id,
+                name: d.name,
               }))}
               placeholder="Select Department"
             />
@@ -262,18 +258,16 @@ export default function QuickMarkAttendancePage() {
 
           {/* Class/Subject Selection */}
           <div>
-            <label className="block text-sm font-semibold text-neutral-primary mb-2">
-              Class / Subject
-            </label>
             <Select
+              label="Class / Subject"
               value={subject}
               onChange={(val) => {
                 setSubject(val);
                 handleChangeClass(val);
               }}
               options={[
-                { value: "A", label: "Class A" },
-                { value: "B", label: "Class B" },
+                { id: "A", name: "Class A" },
+                { id: "B", name: "Class B" },
               ]}
               placeholder="Select Class"
             />
@@ -281,15 +275,13 @@ export default function QuickMarkAttendancePage() {
 
           {/* Period Selection */}
           <div>
-            <label className="block text-sm font-semibold text-neutral-primary mb-2">
-              Period
-            </label>
             <Select
+              label="Period"
               value={selectedPeriod}
               onChange={setSelectedPeriod}
               options={periods.map((p) => ({
-                value: p.id.toString(),
-                label: `${p.name} (${p.startTime}-${p.endTime})`,
+                id: p.id.toString(),
+                name: `${p.name} (${p.startTime}-${p.endTime})`,
               }))}
               placeholder="Select Period"
             />
@@ -297,15 +289,13 @@ export default function QuickMarkAttendancePage() {
 
           {/* Student Selection */}
           <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-neutral-primary mb-2">
-              Student
-            </label>
             <Select
+              label="Student"
               value={selectedStudent}
               onChange={setSelectedStudent}
               options={students.map((s) => ({
-                value: s.id,
-                label: `${s.name} (${s.rollNo})`,
+                id: s.id,
+                name: `${s.name} (${s.rollNo})`,
               }))}
               placeholder="Select Student"
             />

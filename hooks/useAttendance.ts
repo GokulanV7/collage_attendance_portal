@@ -17,7 +17,7 @@ import {
   getAttendanceByDate,
   getAttendanceSummary,
   getAllAttendanceRecords,
-} from "./attendanceStorage";
+} from "@/utils/attendanceStorage";
 
 interface UseAttendanceReturn {
   // State

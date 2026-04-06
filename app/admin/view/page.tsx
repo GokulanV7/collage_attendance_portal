@@ -3,12 +3,8 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin";
 import { useAttendance } from "@/context/AttendanceContext";
-<<<<<<< HEAD
 import { getBatches, getClassesByDepartment, getSubjectsByDepartment, getStudentsByClass } from "@/data/mockDatabase";
 import { Batch, Class, Subject } from "@/types";
-=======
-import { AttendanceStatus } from "@/types";
->>>>>>> 08d53ff (Added attendance feature based on date and time)
 
 type View = "classes" | "subjects" | "attendance";
 
@@ -245,27 +241,11 @@ export default function AdminView() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-<<<<<<< HEAD
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Attendance Records</h1>
             <p className="text-sm text-gray-500 mt-1">{adminDeptName}</p>
-=======
-        <Card className="border border-neutral-border shadow-sm bg-brand-background">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-xs text-neutral-secondary">Academic Year 2025</p>
-              <h3 className="text-xl font-bold text-neutral-primary">Attendance Overview</h3>
-              <p className="text-sm text-neutral-secondary">Department dashboard</p>
-            </div>
-            <div className="flex flex-col gap-3 md:w-2/3">
-              {headerFilters}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" onClick={() => window.print()}>Generate Report</Button>
-            </div>
->>>>>>> 08d53ff (Added attendance feature based on date and time)
           </div>
           <div className="flex items-center gap-3">
             <label className="text-sm font-medium text-gray-600">Batch:</label>
@@ -314,7 +294,6 @@ export default function AdminView() {
           </button>
         )}
 
-<<<<<<< HEAD
         {/* ===== CLASSES VIEW ===== */}
         {currentView === "classes" && (
           <div>
@@ -558,164 +537,6 @@ export default function AdminView() {
               </div>
             )}
           </div>
-=======
-        {hasData && (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <Card className="bg-brand-primarySoft border border-brand-primary/40">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-brand-secondary">Total Students</p>
-                    <p className="text-3xl font-bold text-brand-secondary mt-2">{totalStudents}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-status-successStrong bg-status-successSoft px-2 py-1 rounded-lg">+2%</span>
-                </div>
-              </Card>
-              <Card className="bg-brand-background border border-neutral-border">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-neutral-secondary">Working Days</p>
-                    <p className="text-3xl font-bold text-neutral-primary mt-2">{workingDays}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-status-infoStrong bg-status-infoSoft px-2 py-1 rounded-lg">+0</span>
-                </div>
-              </Card>
-              <Card className="bg-brand-surface border border-neutral-border">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-neutral-secondary">Class Average</p>
-                    <p className="text-3xl font-bold text-status-successStrong mt-2">{classAverage}%</p>
-                  </div>
-                  <span className="text-xs font-semibold text-status-dangerStrong bg-status-dangerSoft px-2 py-1 rounded-lg">-1.2%</span>
-                </div>
-              </Card>
-              <Card className="bg-status-warningSoft border border-status-warning/60">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-status-warningStrong">Students &lt; 75%</p>
-                    <p className="text-3xl font-bold text-status-warningStrong mt-2">{below75}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-status-warningStrong bg-brand-background px-2 py-1 rounded-lg">Action</span>
-                </div>
-              </Card>
-              <Card className="bg-status-dangerSoft border border-status-danger/60">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-status-dangerStrong">Students &lt; 65%</p>
-                    <p className="text-3xl font-bold text-status-dangerStrong mt-2">{below65}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-status-dangerStrong bg-brand-background px-2 py-1 rounded-lg">Critical</span>
-                </div>
-              </Card>
-            </div>
-
-            <Card className="border border-neutral-border bg-brand-background">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                  <div className="relative w-full md:w-64">
-                    <input
-                      type="text"
-                      value={filters.search}
-                      onChange={(e) => setFilters((prev) => ({ ...prev, search: e.target.value }))}
-                      placeholder="Search students..."
-                      className="w-full rounded-xl border border-neutral-border bg-brand-surface px-4 py-2 text-sm text-neutral-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary"
-                    />
-                  </div>
-                  <select
-                    className="rounded-xl border border-neutral-border bg-brand-surface px-3 py-2 text-sm text-neutral-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary"
-                    value={filters.status}
-                    onChange={(e) => setFilters((prev) => ({ ...prev, status: e.target.value }))}
-                  >
-                    <option value="">All Attendance</option>
-                    <option value="Present">Present</option>
-                    <option value="Absent">Absent</option>
-                    <option value="On-Duty">On-Duty</option>
-                  </select>
-                  <Button variant="secondary" onClick={() => setFilters((prev) => ({ ...prev, search: "" }))}>Sort By</Button>
-                  <Button onClick={() => window.print()}>Export Excel</Button>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto rounded-2xl border border-neutral-border">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-brand-primarySoft text-brand-secondary">
-                    <tr>
-                      <th className="px-4 py-3 text-left">Student Name</th>
-                      <th className="px-4 py-3 text-left">Roll No</th>
-                      <th className="px-4 py-3 text-left">Class</th>
-                      <th className="px-4 py-3 text-left">Semester</th>
-                      <th className="px-4 py-3 text-left">Date</th>
-                      <th className="px-4 py-3 text-left">Period</th>
-                      <th className="px-4 py-3 text-left">Staff</th>
-                      <th className="px-4 py-3 text-left">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRows.length === 0 && (
-                      <tr>
-                        <td colSpan={8} className="px-4 py-8 text-center text-neutral-secondary">No matching records</td>
-                      </tr>
-                    )}
-                    {filteredRows.map((row, idx) => (
-                      <tr key={`${row.rollNo}-${idx}`} className={idx % 2 === 0 ? "bg-brand-background" : "bg-brand-surface"}>
-                        <td className="px-4 py-3 font-medium text-neutral-primary">{row.studentName}</td>
-                        <td className="px-4 py-3 font-mono text-xs text-neutral-muted">{row.rollNo}</td>
-                        <td className="px-4 py-3 text-neutral-primary">{row.className}</td>
-                        <td className="px-4 py-3 text-neutral-primary">{row.semester ? `Sem ${row.semester}` : "-"}</td>
-                        <td className="px-4 py-3 text-neutral-primary">{row.date}</td>
-                        <td className="px-4 py-3 text-neutral-primary">{row.period}</td>
-                        <td className="px-4 py-3 text-neutral-primary">{row.staffName} ({row.staffId})</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusChip(row.status)}`}>
-                            {row.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <Card className="lg:col-span-2 border border-neutral-border bg-brand-background">
-                <div className="flex items-center gap-2 mb-3 text-xs text-neutral-secondary">
-                  <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-status-infoStrong"></span>Actual %</span>
-                  <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-neutral-border"></span>Target %</span>
-                </div>
-                <div className="h-52 bg-brand-surface border border-dashed border-neutral-border rounded-xl flex items-center justify-center text-neutral-secondary text-sm">
-                  Trend chart placeholder
-                </div>
-                <div className="mt-4 text-sm text-neutral-secondary bg-brand-surface border border-neutral-border rounded-xl p-3">
-                  Insight: Attendance peaked mid-term; monitor sections falling below target.
-                </div>
-              </Card>
-              <Card className="border border-neutral-border bg-brand-background">
-                <p className="text-sm font-semibold text-neutral-primary mb-2">Status Breakdown</p>
-                <div className="space-y-2 text-sm text-neutral-secondary">
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-status-successStrong"></span>Present</span>
-                    <span className="font-semibold text-neutral-primary">{statusCounts.Present}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-status-dangerStrong"></span>Absent</span>
-                    <span className="font-semibold text-neutral-primary">{statusCounts.Absent}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-status-infoStrong"></span>On-Duty</span>
-                    <span className="font-semibold text-neutral-primary">{statusCounts["On-Duty"]}</span>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div className="flex gap-3 justify-center">
-              <Link href="/">
-                <Button variant="secondary">Back to Home</Button>
-              </Link>
-            </div>
-          </>
->>>>>>> 08d53ff (Added attendance feature based on date and time)
         )}
       </div>
     </AdminLayout>
