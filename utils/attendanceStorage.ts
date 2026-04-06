@@ -77,6 +77,10 @@ export const checkTimeValidity = (
  * Get all stored attendance records
  */
 export const getAllAttendanceRecords = (): AttendanceRecord[] => {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : [];
