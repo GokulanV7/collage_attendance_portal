@@ -60,8 +60,12 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
     }
 
     if (data.length > 0) {
-      // Preserve uploaded file data as-is (no automatic batch/class/department overrides)
-      let filteredData = data;
+      // Keep original row values, but allow optional prefill overrides for batch/class.
+      let filteredData = data.map((row) => ({
+        ...row,
+        batch: prefillBatch || row.batch,
+        class: prefillClass || row.class,
+      }));
 
       // Filter by admin department if restricted (and no prefill override)
       let wrongDeptCount = 0;
