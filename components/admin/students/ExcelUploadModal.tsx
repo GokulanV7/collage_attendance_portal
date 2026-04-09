@@ -60,11 +60,14 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
     }
 
     if (data.length > 0) {
+      // Keep original row values, but allow optional prefill overrides for batch/class.
       // If opened from a specific class context, override batch/class/department
       let filteredData = data.map((row) => ({
         ...row,
         batch: prefillBatch || row.batch,
         class: prefillClass || row.class,
+      }));
+
         department: (isRestrictedAdmin && adminDept) ? adminDept : row.department,
       }));
       // Filter by admin department if restricted (and no prefill override)
@@ -117,6 +120,21 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
         duplicateMessages.push(
           `Skipped ${duplicateInFile.size} rows: duplicate roll numbers inside the file. Examples: ${examples.join(', ')}${duplicateInFile.size > 10 ? '...' : ''}`
         );
+      }
+
+      if (duplicateMessages.length > 0) {
+        setParseErrors((prev) => [...prev, ...duplicateMessages]);
+      }
+
+      if (uniqueRows.length === 0) {
+        setParsedData([]);
+        setStep('upload');
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+
       }
 
       if (duplicateMessages.length > 0) {
@@ -342,6 +360,7 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
                 </div>
 
                 {/* Info banner when batch/class is being overridden */}
+
                 {(prefillBatch || prefillClass) && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                     <p className="text-sm text-blue-800">
