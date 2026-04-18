@@ -6,8 +6,7 @@ import { AdminLayout } from "@/components/admin";
 import { useAttendance } from "@/context/AttendanceContext";
 import { useStudents } from "@/context/StudentsContext";
 import { safeSessionStorage } from "@/utils/safeSessionStorage";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { generateAttendanceReport, AttendanceRecord as ReportAttendanceRecord } from "@/utils/excelGenerator";
 import {
   AreaChart,
   Area,
@@ -18,6 +17,57 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
+
+const normalizeText = (value: string): string => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const isWithinDateRange = (date: string, dateFrom: string, dateTo: string): boolean => {
+  if (!dateFrom && !dateTo) {
+    return true;
+  }
+
+  const attendanceDate = new Date(date);
+  if (Number.isNaN(attendanceDate.getTime())) {
+    return false;
+  }
+
+  if (dateFrom) {
+    const fromDate = new Date(dateFrom);
+    if (attendanceDate < fromDate) {
+      return false;
+    }
+  }
+
+  if (dateTo) {
+    const toDate = new Date(dateTo);
+    toDate.setHours(23, 59, 59, 999);
+    if (attendanceDate > toDate) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+const matchesAdminDepartment = (
+  submissionDepartment: string,
+  submissionDepartmentId: string | undefined,
+  adminDeptId: string | null,
+  adminDeptName: string
+): boolean => {
+  if (!adminDeptId || adminDeptId === "Overall") {
+    return true;
+  }
+
+  if (submissionDepartmentId && submissionDepartmentId === adminDeptId) {
+    return true;
+  }
+
+  const normalizedSubmissionDept = normalizeText(submissionDepartment);
+  return (
+    normalizedSubmissionDept === normalizeText(adminDeptId) ||
+    normalizedSubmissionDept === normalizeText(adminDeptName)
+  );
+};
 
 // Status badge component
 const StatusBadge = ({ status }: { status: string }) => {
@@ -102,7 +152,7 @@ export default function AdminDashboard() {
   const [adminDept, setAdminDept] = useState<string | null>(null);
   const [adminName, setAdminName] = useState<string>("Admin");
   const [filters, setFilters] = useState({
-    academicYear: "2024-2028",
+    academicYear: "All",
     classSection: "All",
     semester: "All",
     dateFrom: "",
@@ -127,48 +177,87 @@ export default function AdminDashboard() {
     setAdminName(name);
   }, [router]);
 
+  const departmentSubmissions = useMemo(() => {
+    return submissions.filter((submission) =>
+      matchesAdminDepartment(submission.department, submission.departmentId, adminDept, adminName)
+    );
+  }, [submissions, adminDept, adminName]);
+
+  const filteredSubmissions = useMemo(() => {
+    return departmentSubmissions.filter((submission) => {
+      if (filters.academicYear !== "All" && submission.batch !== filters.academicYear) {
+        return false;
+      }
+
+      if (filters.classSection !== "All" && submission.class !== filters.classSection) {
+        return false;
+      }
+
+      if (filters.semester !== "All" && String(submission.semester) !== filters.semester) {
+        return false;
+      }
+
+      if (!isWithinDateRange(submission.date, filters.dateFrom, filters.dateTo)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [departmentSubmissions, filters]);
+
   // Filter options
   const academicYears = useMemo(() => {
-    const years = new Set(students.map(s => s.batch));
-    return ["All", ...Array.from(years)];
-  }, [students]);
+    const years = new Set<string>([
+      ...students.map((student) => student.batch),
+      ...departmentSubmissions.map((submission) => submission.batch),
+    ]);
+    return ["All", ...Array.from(years).sort()];
+  }, [students, departmentSubmissions]);
 
   const classSections = useMemo(() => {
-    const classes = new Set(students.map(s => s.class));
-    return ["All", ...Array.from(classes)];
-  }, [students]);
+    const classes = new Set<string>([
+      ...students.map((student) => student.class),
+      ...departmentSubmissions.map((submission) => submission.class),
+    ]);
+    return ["All", ...Array.from(classes).sort()];
+  }, [students, departmentSubmissions]);
 
   const semesters = useMemo(() => {
-    const sems = new Set(students.map(s => String(s.semester)));
-    return ["All", ...Array.from(sems).sort()];
-  }, [students]);
+    const sems = new Set<string>([
+      ...students.map((student) => String(student.semester)),
+      ...departmentSubmissions.map((submission) => String(submission.semester)),
+    ]);
+    return ["All", ...Array.from(sems).sort((a, b) => Number(a) - Number(b))];
+  }, [students, departmentSubmissions]);
 
   // Filter students by admin department and filters
   const filteredStudents = useMemo(() => {
     let filtered = [...students];
-    
-    // Filter by admin department
+
     if (adminDept && adminDept !== "Overall") {
-      filtered = filtered.filter(s => s.department === adminDept);
+      filtered = filtered.filter((student) => {
+        const normalizedStudentDept = normalizeText(student.department);
+        return (
+          normalizedStudentDept === normalizeText(adminDept) ||
+          normalizedStudentDept === normalizeText(adminName)
+        );
+      });
     }
-    
-    // Filter by academic year
+
     if (filters.academicYear !== "All") {
-      filtered = filtered.filter(s => s.batch === filters.academicYear);
+      filtered = filtered.filter((student) => student.batch === filters.academicYear);
     }
-    
-    // Filter by class
+
     if (filters.classSection !== "All") {
-      filtered = filtered.filter(s => s.class === filters.classSection);
+      filtered = filtered.filter((student) => student.class === filters.classSection);
     }
-    
-    // Filter by semester
+
     if (filters.semester !== "All") {
-      filtered = filtered.filter(s => String(s.semester) === filters.semester);
+      filtered = filtered.filter((student) => String(student.semester) === filters.semester);
     }
-    
+
     return filtered;
-  }, [students, adminDept, filters]);
+  }, [students, adminDept, adminName, filters]);
 
   // Calculate attendance data per student
   const studentAttendanceData = useMemo(() => {
@@ -179,7 +268,7 @@ export default function AdminDashboard() {
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const twoWeeksAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
     
-    submissions.forEach(sub => {
+    filteredSubmissions.forEach(sub => {
       const subDate = new Date(sub.date);
       sub.attendance.forEach(record => {
         const current = map.get(record.rollNo) || {
@@ -209,11 +298,40 @@ export default function AdminDashboard() {
     });
     
     return map;
-  }, [submissions]);
+  }, [filteredSubmissions]);
 
   // Students with attendance stats
   const studentsWithStats = useMemo(() => {
-    return filteredStudents.map(student => {
+    const studentsFromSubmissions = new Map<string, { rollNo: string; name: string }>();
+
+    filteredSubmissions.forEach((submission) => {
+      submission.attendance.forEach((record) => {
+        if (!studentsFromSubmissions.has(record.rollNo)) {
+          studentsFromSubmissions.set(record.rollNo, {
+            rollNo: record.rollNo,
+            name: record.studentName,
+          });
+        }
+      });
+    });
+
+    const mergedStudents = filteredStudents.map((student) => ({
+      id: student.id,
+      name: student.name,
+      rollNo: student.rollNo,
+    }));
+
+    studentsFromSubmissions.forEach((student, rollNo) => {
+      if (!mergedStudents.find((s) => s.rollNo === rollNo)) {
+        mergedStudents.push({
+          id: `submission-${rollNo}`,
+          name: student.name,
+          rollNo,
+        });
+      }
+    });
+
+    return mergedStudents.map(student => {
       const data = studentAttendanceData.get(student.rollNo);
       const overallPercent = data && data.total > 0 ? (data.present / data.total) * 100 : 0;
       const monthlyPercent = data && data.monthly.total > 0 ? (data.monthly.present / data.monthly.total) * 100 : 0;
@@ -233,7 +351,7 @@ export default function AdminDashboard() {
         status,
       };
     });
-  }, [filteredStudents, studentAttendanceData]);
+  }, [filteredStudents, filteredSubmissions, studentAttendanceData]);
 
   // Apply search and status filter
   const displayStudents = useMemo(() => {
@@ -268,9 +386,13 @@ export default function AdminDashboard() {
   const totalPages = Math.ceil(displayStudents.length / pageSize);
   const paginatedStudents = displayStudents.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filters, searchQuery, statusFilter, sortBy]);
+
   // Summary stats
   const summaryStats = useMemo(() => {
-    const totalStudents = filteredStudents.length;
+    const totalStudents = studentsWithStats.length;
     const avgAttendance = studentsWithStats.length > 0 
       ? studentsWithStats.reduce((acc, s) => acc + s.overallPercent, 0) / studentsWithStats.length 
       : 0;
@@ -278,19 +400,19 @@ export default function AdminDashboard() {
     const below65 = studentsWithStats.filter(s => s.overallPercent < 65).length;
     
     // Calculate working days from submissions
-    const uniqueDates = new Set(submissions.map(s => s.date));
+    const uniqueDates = new Set(filteredSubmissions.map(s => s.date));
     const workingDays = uniqueDates.size;
     
     return { totalStudents, avgAttendance, below75, below65, workingDays };
-  }, [filteredStudents, studentsWithStats, submissions]);
+  }, [studentsWithStats, filteredSubmissions]);
 
   // Trend data for chart (monthly averages)
   const trendData = useMemo(() => {
     const monthMap = new Map<string, { present: number; total: number }>();
     
-    submissions.forEach(sub => {
+    filteredSubmissions.forEach(sub => {
       const date = new Date(sub.date);
-      const monthKey = date.toLocaleString('default', { month: 'short' }).toUpperCase();
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       
       const current = monthMap.get(monthKey) || { present: 0, total: 0 };
       sub.attendance.forEach(record => {
@@ -301,98 +423,43 @@ export default function AdminDashboard() {
       });
       monthMap.set(monthKey, current);
     });
-    
-    const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
-    return months
-      .filter(m => monthMap.has(m))
-      .map(month => {
-        const data = monthMap.get(month)!;
+
+    return Array.from(monthMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([monthKey, data]) => {
+        const [year, month] = monthKey.split("-");
+        const labelDate = new Date(Number(year), Number(month) - 1, 1);
         return {
-          month,
+          month: labelDate.toLocaleString("default", { month: "short" }).toUpperCase(),
           attendance: data.total > 0 ? (data.present / data.total) * 100 : 0,
         };
       });
-  }, [submissions]);
+  }, [filteredSubmissions]);
 
-  // Export handler - PDF format
+  // Export handler - Excel format
   const handleExport = useCallback(() => {
-    const doc = new jsPDF();
-    
-    // Title
-    doc.setFontSize(18);
-    doc.setTextColor(30, 41, 59);
-    doc.text("Attendance Report", 14, 20);
-    
-    // Subtitle with date
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`Department: ${adminDept} | Generated: ${new Date().toLocaleDateString()}`, 14, 28);
-    
-    // Summary stats
-    const totalStudents = displayStudents.length;
-    const avgAttendance = displayStudents.length > 0
-      ? displayStudents.reduce((sum, s) => sum + s.overallPercent, 0) / displayStudents.length
-      : 0;
-    const criticalCount = displayStudents.filter(s => s.status === "CRITICAL").length;
-    
-    doc.setFontSize(11);
-    doc.setTextColor(30, 41, 59);
-    doc.text(`Total Students: ${totalStudents} | Average Attendance: ${avgAttendance.toFixed(1)}% | Critical: ${criticalCount}`, 14, 36);
-    
-    // Table data
-    const headers = [["Student Name", "Roll No", "15-Day %", "Monthly %", "Semester %", "Status"]];
-    const rows = displayStudents.map(s => [
-      s.name,
-      s.rollNo,
-      s.recentPercent.toFixed(1) + "%",
-      s.monthlyPercent.toFixed(1) + "%",
-      s.overallPercent.toFixed(1) + "%",
-      s.status,
-    ]);
-    
-    // Generate table
-    autoTable(doc, {
-      head: headers,
-      body: rows,
-      startY: 44,
-      styles: {
-        fontSize: 9,
-        cellPadding: 3,
-      },
-      headStyles: {
-        fillColor: [59, 130, 246],
-        textColor: 255,
-        fontStyle: "bold",
-      },
-      alternateRowStyles: {
-        fillColor: [248, 250, 252],
-      },
-      columnStyles: {
-        5: { 
-          fontStyle: "bold",
-          cellWidth: 25,
-        },
-      },
-      didParseCell: (data) => {
-        // Color status cells
-        if (data.column.index === 5 && data.section === "body") {
-          const status = data.cell.raw as string;
-          if (status === "EXCELLENT") {
-            data.cell.styles.textColor = [5, 150, 105];
-          } else if (status === "SAFE") {
-            data.cell.styles.textColor = [37, 99, 235];
-          } else if (status === "WARNING") {
-            data.cell.styles.textColor = [217, 119, 6];
-          } else if (status === "CRITICAL") {
-            data.cell.styles.textColor = [220, 38, 38];
-          }
-        }
-      },
+    const rows: ReportAttendanceRecord[] = [];
+
+    filteredSubmissions.forEach((submission) => {
+      submission.attendance.forEach((record) => {
+        rows.push({
+          date: submission.date,
+          batch: submission.batch,
+          department: submission.department,
+          className: submission.class,
+          semester: submission.semester,
+          period: submission.periods.map((period) => period.name).join(", "),
+          staffId: submission.staffId,
+          staffName: submission.staffName,
+          rollNo: record.rollNo,
+          studentName: record.studentName,
+          status: record.status,
+        });
+      });
     });
-    
-    // Save PDF
-    doc.save(`attendance_report_${new Date().toISOString().split("T")[0]}.pdf`);
-  }, [displayStudents, adminDept]);
+
+    generateAttendanceReport(rows, "dashboard_attendance.xlsx");
+  }, [filteredSubmissions]);
 
   if (!adminDept) {
     return (
@@ -412,7 +479,7 @@ export default function AdminDashboard() {
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Attendance Overview</h1>
             <p className="text-sm text-gray-500 mt-1">
-              Academic Year 2024-25 • {filters.semester === "All" ? "All Semesters" : `Semester ${filters.semester}`}
+              {filters.academicYear === "All" ? "All Academic Years" : `Academic Year ${filters.academicYear}`} • {filters.semester === "All" ? "All Semesters" : `Semester ${filters.semester}`}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -443,8 +510,8 @@ export default function AdminDashboard() {
                 onChange={(e) => setFilters(prev => ({ ...prev, academicYear: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {academicYears.map(year => (
-                  <option key={year} value={year}>{year === "All" ? "All Years" : year}</option>
+                {academicYears.map((year, index) => (
+                  <option key={`${year}-${index}`} value={year}>{year === "All" ? "All Years" : year}</option>
                 ))}
               </select>
             </div>
@@ -455,8 +522,8 @@ export default function AdminDashboard() {
                 onChange={(e) => setFilters(prev => ({ ...prev, classSection: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {classSections.map(cls => (
-                  <option key={cls} value={cls}>{cls === "All" ? "All Sections" : cls}</option>
+                {classSections.map((cls, index) => (
+                  <option key={`${cls}-${index}`} value={cls}>{cls === "All" ? "All Sections" : cls}</option>
                 ))}
               </select>
             </div>
@@ -467,18 +534,27 @@ export default function AdminDashboard() {
                 onChange={(e) => setFilters(prev => ({ ...prev, semester: e.target.value }))}
                 className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                {semesters.map(sem => (
-                  <option key={sem} value={sem}>{sem === "All" ? "All Semesters" : `Semester ${sem}`}</option>
+                {semesters.map((sem, index) => (
+                  <option key={`${sem}-${index}`} value={sem}>{sem === "All" ? "All Semesters" : `Semester ${sem}`}</option>
                 ))}
               </select>
             </div>
             <div className="flex-1 min-w-[200px]">
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Date Range</label>
-              <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span className="text-sm text-gray-600">Jan 01 - Dec 31</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, dateFrom: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-500">to</span>
+                <input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, dateTo: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
             </div>
             <div className="flex items-end">
@@ -685,7 +761,9 @@ export default function AdminDashboard() {
             {/* Pagination */}
             <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
               <p className="text-sm text-gray-500">
-                Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, displayStudents.length)} of {displayStudents.length} students
+                {displayStudents.length === 0
+                  ? "Showing 0 students"
+                  : `Showing ${((currentPage - 1) * pageSize) + 1} to ${Math.min(currentPage * pageSize, displayStudents.length)} of ${displayStudents.length} students`}
               </p>
               <div className="flex items-center gap-2">
                 <button
@@ -714,7 +792,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-xl border border-gray-100 p-5">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-base font-bold text-gray-900">Semester Trend</h3>
-              <span className="text-xs text-gray-500">Jan - Dec 2024</span>
+              <span className="text-xs text-gray-500">Based on selected filters</span>
             </div>
             
             <div className="h-64">
@@ -776,7 +854,7 @@ export default function AdminDashboard() {
             {/* Insight */}
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <p className="text-xs text-blue-700">
-                <span className="font-semibold">Insight:</span> Attendance peaked in early March following the mid-semester reviews. A minor dip is observed in late April.
+                <span className="font-semibold">Insight:</span> This chart and table update in real time from staff-marked attendance for the selected filters.
               </p>
             </div>
           </div>

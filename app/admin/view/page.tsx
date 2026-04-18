@@ -4,12 +4,26 @@ import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { AdminLayout } from "@/components/admin";
 import { useAttendance } from "@/context/AttendanceContext";
 import { getBatches, getClassesByDepartment, getSubjectsByDepartment, getStudentsByClass } from "@/data/mockDatabase";
-import { Batch, Class, Subject } from "@/types";
+import { Class, Subject } from "@/types";
+import { generateAttendanceReport, AttendanceRecord as ReportAttendanceRecord } from "@/utils/excelGenerator";
 
 type View = "classes" | "subjects" | "attendance";
 
 // Normalize batch string: replace em-dash with hyphen for consistent comparison
 const normalizeBatch = (b: string): string => b.replace(/\u2013/g, "-");
+const normalizeText = (value: string): string => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const doesSubmissionMatchDepartment = (submissionDept: string, submissionDeptId: string | undefined, adminDeptId: string, adminDeptName: string): boolean => {
+  if (submissionDeptId && submissionDeptId === adminDeptId) {
+    return true;
+  }
+
+  const normalizedSubmissionDept = normalizeText(submissionDept);
+  return (
+    normalizedSubmissionDept === normalizeText(adminDeptName) ||
+    normalizedSubmissionDept === normalizeText(adminDeptId)
+  );
+};
 
 export default function AdminView() {
   const { submissions } = useAttendance();
@@ -49,19 +63,19 @@ export default function AdminView() {
     const normalizedBatch = normalizeBatch(selectedBatch);
     return submissions.filter((s) => {
       if (normalizeBatch(s.batch) !== normalizedBatch) return false;
-      if (s.department !== adminDeptName) return false;
+      if (!doesSubmissionMatchDepartment(s.department, s.departmentId, adminDeptId, adminDeptName)) return false;
       if (selectedClass && s.class !== selectedClass.name) return false;
       if (selectedSubject && s.subject !== selectedSubject.name) return false;
       return true;
     });
-  }, [submissions, selectedBatch, adminDeptName, selectedClass, selectedSubject]);
+  }, [submissions, selectedBatch, adminDeptName, adminDeptId, selectedClass, selectedSubject]);
 
   // For classes view: count periods per class
   const classStats = useMemo(() => {
     const normalizedBatch = normalizeBatch(selectedBatch);
     const map = new Map<string, { sessions: number; totalRecords: number; presentCount: number }>();
     submissions
-      .filter((s) => normalizeBatch(s.batch) === normalizedBatch && s.department === adminDeptName)
+      .filter((s) => normalizeBatch(s.batch) === normalizedBatch && doesSubmissionMatchDepartment(s.department, s.departmentId, adminDeptId, adminDeptName))
       .forEach((s) => {
         const cur = map.get(s.class) || { sessions: 0, totalRecords: 0, presentCount: 0 };
         const periodCount = s.periods.length || 1;
@@ -73,7 +87,7 @@ export default function AdminView() {
         map.set(s.class, cur);
       });
     return map;
-  }, [submissions, selectedBatch, adminDeptName]);
+  }, [submissions, selectedBatch, adminDeptName, adminDeptId]);
 
   // For subjects view: count periods per subject for selected class
   const subjectStats = useMemo(() => {
@@ -81,7 +95,7 @@ export default function AdminView() {
     const normalizedBatch = normalizeBatch(selectedBatch);
     const map = new Map<string, { sessions: number; totalRecords: number; presentCount: number }>();
     submissions
-      .filter((s) => normalizeBatch(s.batch) === normalizedBatch && s.department === adminDeptName && s.class === selectedClass.name)
+      .filter((s) => normalizeBatch(s.batch) === normalizedBatch && doesSubmissionMatchDepartment(s.department, s.departmentId, adminDeptId, adminDeptName) && s.class === selectedClass.name)
       .forEach((s) => {
         const cur = map.get(s.subject) || { sessions: 0, totalRecords: 0, presentCount: 0 };
         const periodCount = s.periods.length || 1;
@@ -93,7 +107,7 @@ export default function AdminView() {
         map.set(s.subject, cur);
       });
     return map;
-  }, [submissions, selectedBatch, adminDeptName, selectedClass]);
+  }, [submissions, selectedBatch, adminDeptName, adminDeptId, selectedClass]);
 
   // For attendance view: per-student stats (includes ALL students in the class)
   const studentAttendanceData = useMemo(() => {
@@ -177,28 +191,30 @@ export default function AdminView() {
     setSearchQuery("");
   };
 
-  // Export CSV
-  const handleExport = useCallback(() => {
-    if (currentView !== "attendance" || filteredStudents.length === 0) return;
-    const headers = ["Roll No", "Student Name", "Present", "Absent", "On-Duty", "Total", "Attendance %"];
-    const rows = filteredStudents.map((s) => [
-      s.rollNo,
-      s.name,
-      s.present,
-      s.absent,
-      s.onDuty,
-      s.total,
-      s.total > 0 ? ((s.present + s.onDuty) / s.total * 100).toFixed(1) : "0.0",
-    ]);
-    const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `attendance_${selectedClass?.name}_${selectedSubject?.code}_${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [filteredStudents, currentView, selectedClass, selectedSubject]);
+  const handleGenerateReport = useCallback(() => {
+    if (currentView !== "attendance") return;
+
+    const reportRows: ReportAttendanceRecord[] = [];
+    contextSubmissions.forEach((submission) => {
+      submission.attendance.forEach((entry) => {
+        reportRows.push({
+          date: submission.date,
+          batch: submission.batch,
+          department: submission.department,
+          className: submission.class,
+          semester: submission.semester,
+          period: submission.periods.map((period) => period.name).join(", "),
+          staffId: submission.staffId,
+          staffName: submission.staffName,
+          rollNo: entry.rollNo,
+          studentName: entry.studentName,
+          status: entry.status,
+        });
+      });
+    });
+
+    generateAttendanceReport(reportRows, "attendance_report.xlsx");
+  }, [currentView, contextSubmissions]);
 
   const getAttendanceColor = (pct: number) => {
     if (pct >= 90) return "text-emerald-600 bg-emerald-50";
@@ -463,13 +479,13 @@ export default function AdminView() {
                 />
               </div>
               <button
-                onClick={handleExport}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-brand-secondary text-white text-sm font-semibold rounded-lg hover:bg-brand-secondary/90 transition-colors"
+                onClick={handleGenerateReport}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
                 </svg>
-                Export CSV
+                Download Excel
               </button>
             </div>
 
