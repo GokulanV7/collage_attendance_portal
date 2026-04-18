@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { AdminStudent } from '@/types';
 import { safeSessionStorage } from '@/utils/safeSessionStorage';
+import { api } from '@/lib/api';
 
 const STORAGE_KEY = 'admin_students';
 
@@ -46,7 +47,22 @@ export const StudentsProvider: React.FC<StudentsProviderProps> = ({ children }) 
         console.error('Failed to parse students from storage:', e);
       }
     }
-    setLoading(false);
+
+    const hydrateFromApi = async () => {
+      try {
+        const response = await api.initData();
+        const fetchedStudents = response?.data?.students;
+        if (Array.isArray(fetchedStudents)) {
+          setStudents(fetchedStudents);
+        }
+      } catch (e) {
+        console.error('Failed to hydrate students from API:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void hydrateFromApi();
   }, []);
 
   // Persist to sessionStorage whenever students change
