@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { Period } from "@/types";
 import { PeriodConfig, Break, formatTimeForDisplay } from "@/data/periodConfigs";
 import { getCurrentPeriod } from "@/utils/periodDetection";
-import { appTheme } from "@/styles/theme";
 
 interface PeriodSelectorProps {
   config: PeriodConfig;
@@ -26,7 +25,7 @@ export const PeriodSelector: React.FC<PeriodSelectorProps> = ({
   // Create a unified timeline with periods and breaks
   const timeline: Array<{ type: "period"; data: Period } | { type: "break"; data: Break }> = [];
   
-  config.periods.forEach((period, index) => {
+  config.periods.forEach((period) => {
     timeline.push({ type: "period", data: period });
     
     // Check if there's a break after this period

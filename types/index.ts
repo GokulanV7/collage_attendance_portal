@@ -65,8 +65,11 @@ export interface Subject {
 
 export interface AttendanceSubmission {
   id: string;
+  batchId?: string;
   batch: string;
+  departmentId?: string;
   department: string;
+  classId?: string;
   class: string;
   semester: string;
   subject: string;

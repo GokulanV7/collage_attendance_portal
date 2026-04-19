@@ -1,5 +1,5 @@
 import { Period } from "@/types";
-import { PeriodConfig, Break, getPeriodConfig } from "@/data/periodConfigs";
+import { PeriodConfig, Break } from "@/data/periodConfigs";
 
 /**
  * Converts time string "HH:MM" to minutes since midnight

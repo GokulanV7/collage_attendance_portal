@@ -4,9 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:web": "next dev",
+    "dev:api": "npm --prefix backend run dev",
+    "dev:full": "concurrently -n FRONTEND,BACKEND -c blue,green \"npm run dev:web\" \"npm run dev:api\"",
     "build": "next build",
+    "build:api": "npm --prefix backend run build",
+    "build:full": "npm run build && npm run build:api",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -25,6 +30,7 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.19",
+    "concurrently": "^9.0.1",
     "eslint": "^10.0.1",
     "eslint-config-next": "^0.2.4",
     "postcss": "^8.4.38",

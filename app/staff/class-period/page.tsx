@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/PageLayout";
 import { Card } from "@/components/Card";
@@ -25,7 +25,6 @@ export default function StaffClassPeriod() {
   const [availableClasses, setAvailableClasses] = useState<{id: string, name: string}[]>([]);
   const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [batchId, setBatchId] = useState("");
 
   const steps = ["Staff ID", "Batch & Dept", "Class & Period", "Mark", "Confirm"];
 
@@ -48,7 +47,6 @@ export default function StaffClassPeriod() {
       return;
     }
 
-    setBatchId(batch);
     // Load classes
     const classes = getClassesByDepartment(batch, dept);
     setAvailableClasses(classes);

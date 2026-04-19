@@ -61,7 +61,6 @@ export const SemesterSelector: React.FC<SemesterSelectorProps> = ({
     setShowCreateSemester(false);
   };
 
-  const filteredDepts = departments.filter((d) => d.id === selectedDept) || [];
   const batchLabel = batches.find((b) => b.id === selectedBatch)?.name;
   const deptLabel = departments.find((d) => d.id === selectedDept)?.name;
 

@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { AttendanceSubmission } from "@/types";
-import { safeSessionStorage } from "@/utils/safeSessionStorage";
 
 interface AttendanceContextType {
   submissions: AttendanceSubmission[];
@@ -22,19 +21,48 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({
   const storageKey = "attendanceSubmissions";
 
   useEffect(() => {
-    const stored = safeSessionStorage.getJSON<AttendanceSubmission[]>(
-      storageKey,
-      []
-    );
-    if (stored && Array.isArray(stored)) {
-      setSubmissions(stored);
+    try {
+      const stored = localStorage.getItem(storageKey);
+      const parsed = stored ? (JSON.parse(stored) as AttendanceSubmission[]) : [];
+      if (Array.isArray(parsed)) {
+        setSubmissions(parsed);
+      }
+    } catch (error) {
+      console.error("Failed to load attendance submissions:", error);
+      setSubmissions([]);
     }
+
+    const onStorageChange = (event: StorageEvent) => {
+      if (event.key !== storageKey) {
+        return;
+      }
+
+      try {
+        const next = event.newValue
+          ? (JSON.parse(event.newValue) as AttendanceSubmission[])
+          : [];
+        if (Array.isArray(next)) {
+          setSubmissions(next);
+        }
+      } catch (error) {
+        console.error("Failed to sync attendance submissions:", error);
+      }
+    };
+
+    window.addEventListener("storage", onStorageChange);
+    return () => {
+      window.removeEventListener("storage", onStorageChange);
+    };
   }, []);
 
   const addSubmission = (submission: AttendanceSubmission) => {
     setSubmissions((prev) => {
       const next = [...prev, submission];
-      safeSessionStorage.setJSON(storageKey, next);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch (error) {
+        console.error("Failed to save attendance submissions:", error);
+      }
       return next;
     });
   };
@@ -45,7 +73,11 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({
 
   const clearSubmissions = () => {
     setSubmissions([]);
-    safeSessionStorage.removeItem(storageKey);
+    try {
+      localStorage.removeItem(storageKey);
+    } catch (error) {
+      console.error("Failed to clear attendance submissions:", error);
+    }
   };
 
   return (
