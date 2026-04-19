@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useStudents } from '@/context/StudentsContext';
 import { parseExcelFile, ParsedStudentRow } from '@/utils/excel/studentExcel';
 import { safeSessionStorage } from '@/utils/safeSessionStorage';
@@ -60,23 +60,23 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
     }
 
     if (data.length > 0) {
-      // Keep original row values, but allow optional prefill overrides for batch/class.
-      // If opened from a specific class context, override batch/class/department
-      let filteredData = data.map((row) => ({
+      const normalizedRows: ParsedStudentRow[] = data.map((row) => ({
         ...row,
         batch: prefillBatch || row.batch,
         class: prefillClass || row.class,
+        department: isRestrictedAdmin && adminDept ? adminDept : row.department,
       }));
 
-        department: (isRestrictedAdmin && adminDept) ? adminDept : row.department,
-      }));
-      // Filter by admin department if restricted (and no prefill override)
-      let wrongDeptCount = 0;
+      // If admin is department restricted and file rows still contain other departments,
+      // keep only allowed rows and show a warning count.
+      let filteredData = normalizedRows;
       if (isRestrictedAdmin && adminDept) {
-        const beforeCount = filteredData.length;
-        filteredData = filteredData.filter((row) => row.department.toUpperCase() === adminDept.toUpperCase());
-        wrongDeptCount = beforeCount - filteredData.length;
-        
+        const beforeCount = normalizedRows.length;
+        filteredData = normalizedRows.filter(
+          (row) => row.department.toUpperCase() === adminDept.toUpperCase()
+        );
+        const wrongDeptCount = beforeCount - filteredData.length;
+
         if (wrongDeptCount > 0) {
           setParseErrors((prev) => [
             ...prev,
@@ -84,10 +84,12 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
           ]);
         }
       }
-      
-      // Check for duplicates with existing students
+
+      // Check duplicates against storage and within the uploaded file.
       const storedStudents = safeSessionStorage.getJSON(STUDENTS_STORAGE_KEY, students);
-      const existingRollNos = new Set(storedStudents.map((s: { rollNo: string }) => s.rollNo.toLowerCase()));
+      const existingRollNos = new Set(
+        storedStudents.map((s: { rollNo: string }) => s.rollNo.toLowerCase())
+      );
 
       const duplicateInFile = new Set<string>();
       const duplicateAlreadyRegistered = new Set<string>();
@@ -96,14 +98,17 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
 
       filteredData.forEach((row) => {
         const rollNoLower = row.rollNo.toLowerCase();
+
         if (existingRollNos.has(rollNoLower)) {
           duplicateAlreadyRegistered.add(row.rollNo);
           return;
         }
+
         if (seenInFile.has(rollNoLower)) {
           duplicateInFile.add(row.rollNo);
           return;
         }
+
         seenInFile.add(rollNoLower);
         uniqueRows.push(row);
       });
@@ -120,21 +125,6 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
         duplicateMessages.push(
           `Skipped ${duplicateInFile.size} rows: duplicate roll numbers inside the file. Examples: ${examples.join(', ')}${duplicateInFile.size > 10 ? '...' : ''}`
         );
-      }
-
-      if (duplicateMessages.length > 0) {
-        setParseErrors((prev) => [...prev, ...duplicateMessages]);
-      }
-
-      if (uniqueRows.length === 0) {
-        setParsedData([]);
-        setStep('upload');
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-        return;
-      }
-
       }
 
       if (duplicateMessages.length > 0) {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { ManagedSubject, Class } from "@/types";
 import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
