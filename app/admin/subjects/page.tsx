@@ -42,7 +42,6 @@ export default function AdminSubjectsPage() {
     error: semestersError,
     loadSemesters,
     addSemester,
-    removeSemester: deleteSemesterFn,
   } = useSemesters(selectedBatch, selectedDept);
 
   const {

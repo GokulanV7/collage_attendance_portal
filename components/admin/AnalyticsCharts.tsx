@@ -12,13 +12,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
-  Legend,
   Area,
   AreaChart,
-  RadialBarChart,
-  RadialBar,
 } from "recharts";
 
 interface SubjectAttendance {
@@ -81,15 +76,6 @@ export const AnalyticsCharts: React.FC<AnalyticsChartsProps> = ({
   statusData,
   trendData,
 }) => {
-  // Color palette
-  const COLORS = {
-    present: "#10B981",
-    absent: "#EF4444",
-    onDuty: "#3B82F6",
-    bar: "#10B981",
-    line: "#7C3AED",
-  };
-
   // Calculate total for percentage display
   const total = statusData.reduce((sum, item) => sum + item.value, 0);
 

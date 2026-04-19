@@ -1,12 +1,30 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin";
 import { useAttendance } from "@/context/AttendanceContext";
 import { getBatches, getClassesByDepartment } from "@/data/mockDatabase";
-import { AttendanceSubmission } from "@/types";
 
 type View = "classes" | "detail";
+
+const normalizeText = (value: string): string => value.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+const matchesDepartment = (
+  submissionDepartment: string,
+  submissionDepartmentId: string | undefined,
+  adminDeptId: string,
+  adminDeptName: string
+): boolean => {
+  if (submissionDepartmentId && submissionDepartmentId === adminDeptId) {
+    return true;
+  }
+
+  const normalizedSubmissionDepartment = normalizeText(submissionDepartment);
+  return (
+    normalizedSubmissionDepartment === normalizeText(adminDeptId) ||
+    normalizedSubmissionDepartment === normalizeText(adminDeptName)
+  );
+};
 
 export default function DailyAttendancePage() {
   const { submissions } = useAttendance();
@@ -70,11 +88,11 @@ export default function DailyAttendancePage() {
     const normalizedSelectedBatch = normalizeBatch(selectedBatch);
     return submissions.filter((s) => {
       const dateMatch = normalizeDate(s.date) === normalizedSelectedDate;
-      const deptMatch = s.department === adminDeptName;
+      const deptMatch = matchesDepartment(s.department, s.departmentId, adminDeptId, adminDeptName);
       const batchMatch = normalizeBatch(s.batch) === normalizedSelectedBatch;
       return dateMatch && deptMatch && batchMatch;
     });
-  }, [submissions, selectedDate, adminDeptName, selectedBatch]);
+  }, [submissions, selectedDate, adminDeptName, adminDeptId, selectedBatch]);
 
   // Submissions filtered by class
   const classSubmissions = useMemo(() => {

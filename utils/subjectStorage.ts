@@ -1,4 +1,4 @@
-import { Semester, ManagedSubject, ClassSubjectMapping, Period } from "@/types";
+import { Semester, ManagedSubject, ClassSubjectMapping } from "@/types";
 
 // ===== Helper Functions =====
 
@@ -30,6 +30,23 @@ const getClassMappingStorageKey = (semesterId: string): string => {
   return `classMappings_${semesterId}`;
 };
 
+const isBrowser = (): boolean => typeof window !== "undefined";
+
+const readFromStorage = (key: string): string | null => {
+  if (!isBrowser()) return null;
+  return localStorage.getItem(key);
+};
+
+const writeToStorage = (key: string, value: string): void => {
+  if (!isBrowser()) return;
+  localStorage.setItem(key, value);
+};
+
+const removeFromStorage = (key: string): void => {
+  if (!isBrowser()) return;
+  localStorage.removeItem(key);
+};
+
 // ===== Semester Operations =====
 
 /**
@@ -37,7 +54,7 @@ const getClassMappingStorageKey = (semesterId: string): string => {
  */
 export const getSemesters = (batchId: string, departmentId: string): Semester[] => {
   try {
-    const stored = localStorage.getItem(getSemesterStorageKey(batchId, departmentId));
+    const stored = readFromStorage(getSemesterStorageKey(batchId, departmentId));
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
     console.error("Error getting semesters:", error);
@@ -73,7 +90,7 @@ export const saveSemester = (semester: Omit<Semester, "id" | "createdAt" | "upda
     const semesters = getSemesters(semester.batchId, semester.departmentId);
     semesters.push(newSemester);
 
-    localStorage.setItem(
+    writeToStorage(
       getSemesterStorageKey(semester.batchId, semester.departmentId),
       JSON.stringify(semesters)
     );
@@ -108,7 +125,7 @@ export const updateSemester = (
       updatedAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(getSemesterStorageKey(batchId, departmentId), JSON.stringify(semesters));
+    writeToStorage(getSemesterStorageKey(batchId, departmentId), JSON.stringify(semesters));
     return semesters[index];
   } catch (error) {
     console.error("Error updating semester:", error);
@@ -124,11 +141,11 @@ export const deleteSemester = (semesterId: string, batchId: string, departmentId
     // Delete semester
     const semesters = getSemesters(batchId, departmentId);
     const filtered = semesters.filter((s) => s.id !== semesterId);
-    localStorage.setItem(getSemesterStorageKey(batchId, departmentId), JSON.stringify(filtered));
+    writeToStorage(getSemesterStorageKey(batchId, departmentId), JSON.stringify(filtered));
 
     // Delete associated subjects
-    localStorage.removeItem(getSubjectStorageKey(semesterId));
-    localStorage.removeItem(getClassMappingStorageKey(semesterId));
+    removeFromStorage(getSubjectStorageKey(semesterId));
+    removeFromStorage(getClassMappingStorageKey(semesterId));
 
     return true;
   } catch (error) {
@@ -144,7 +161,7 @@ export const deleteSemester = (semesterId: string, batchId: string, departmentId
  */
 export const getSubjects = (semesterId: string): ManagedSubject[] => {
   try {
-    const stored = localStorage.getItem(getSubjectStorageKey(semesterId));
+    const stored = readFromStorage(getSubjectStorageKey(semesterId));
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
     console.error("Error getting subjects:", error);
@@ -200,7 +217,7 @@ export const saveSubject = (subject: Omit<ManagedSubject, "id" | "createdAt" | "
     const subjects = getSubjects(subject.semesterId);
     subjects.push(newSubject);
 
-    localStorage.setItem(getSubjectStorageKey(subject.semesterId), JSON.stringify(subjects));
+    writeToStorage(getSubjectStorageKey(subject.semesterId), JSON.stringify(subjects));
 
     return newSubject;
   } catch (error) {
@@ -238,7 +255,7 @@ export const updateSubject = (
       updatedAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(getSubjectStorageKey(semesterId), JSON.stringify(subjects));
+    writeToStorage(getSubjectStorageKey(semesterId), JSON.stringify(subjects));
     return subjects[index];
   } catch (error) {
     console.error("Error updating subject:", error);
@@ -253,12 +270,12 @@ export const deleteSubject = (subjectId: string, semesterId: string): boolean =>
   try {
     const subjects = getSubjects(semesterId);
     const filtered = subjects.filter((s) => s.id !== subjectId);
-    localStorage.setItem(getSubjectStorageKey(semesterId), JSON.stringify(filtered));
+    writeToStorage(getSubjectStorageKey(semesterId), JSON.stringify(filtered));
 
     // Delete associated class mappings
     const mappings = getClassSubjectMappings(semesterId);
     const filteredMappings = mappings.filter((m) => m.subjectId !== subjectId);
-    localStorage.setItem(getClassMappingStorageKey(semesterId), JSON.stringify(filteredMappings));
+    writeToStorage(getClassMappingStorageKey(semesterId), JSON.stringify(filteredMappings));
 
     return true;
   } catch (error) {
@@ -292,7 +309,7 @@ export const getSubjectsByClass = (classId: string, semesterId: string): Managed
  */
 export const getClassSubjectMappings = (semesterId: string): ClassSubjectMapping[] => {
   try {
-    const stored = localStorage.getItem(getClassMappingStorageKey(semesterId));
+    const stored = readFromStorage(getClassMappingStorageKey(semesterId));
     return stored ? JSON.parse(stored) : [];
   } catch (error) {
     console.error("Error getting class mappings:", error);
@@ -317,7 +334,7 @@ export const saveClassSubjectMapping = (
     const mappings = getClassSubjectMappings(mapping.semesterId);
     mappings.push(newMapping);
 
-    localStorage.setItem(getClassMappingStorageKey(mapping.semesterId), JSON.stringify(mappings));
+    writeToStorage(getClassMappingStorageKey(mapping.semesterId), JSON.stringify(mappings));
 
     return newMapping;
   } catch (error) {
@@ -348,7 +365,7 @@ export const updateClassSubjectMapping = (
       updatedAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(getClassMappingStorageKey(semesterId), JSON.stringify(mappings));
+    writeToStorage(getClassMappingStorageKey(semesterId), JSON.stringify(mappings));
     return mappings[index];
   } catch (error) {
     console.error("Error updating class mapping:", error);
@@ -363,7 +380,7 @@ export const deleteClassSubjectMapping = (mappingId: string, semesterId: string)
   try {
     const mappings = getClassSubjectMappings(semesterId);
     const filtered = mappings.filter((m) => m.id !== mappingId);
-    localStorage.setItem(getClassMappingStorageKey(semesterId), JSON.stringify(filtered));
+    writeToStorage(getClassMappingStorageKey(semesterId), JSON.stringify(filtered));
     return true;
   } catch (error) {
     console.error("Error deleting class mapping:", error);
@@ -378,7 +395,7 @@ export const deleteSubjectMappings = (subjectId: string, semesterId: string): bo
   try {
     const mappings = getClassSubjectMappings(semesterId);
     const filtered = mappings.filter((m) => m.subjectId !== subjectId);
-    localStorage.setItem(getClassMappingStorageKey(semesterId), JSON.stringify(filtered));
+    writeToStorage(getClassMappingStorageKey(semesterId), JSON.stringify(filtered));
     return true;
   } catch (error) {
     console.error("Error deleting subject mappings:", error);
@@ -438,8 +455,8 @@ export const getSemesterSummary = (semesterId: string) => {
  */
 export const clearSemesterData = (semesterId: string): boolean => {
   try {
-    localStorage.removeItem(getSubjectStorageKey(semesterId));
-    localStorage.removeItem(getClassMappingStorageKey(semesterId));
+    removeFromStorage(getSubjectStorageKey(semesterId));
+    removeFromStorage(getClassMappingStorageKey(semesterId));
     return true;
   } catch (error) {
     console.error("Error clearing semester data:", error);

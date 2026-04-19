@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PageLayout } from "@/components/PageLayout";
 import { Card } from "@/components/Card";
@@ -136,8 +136,11 @@ export default function StaffMarkAttendance() {
       const now = new Date();
       const submission: AttendanceSubmission = {
         id: `ATT${Date.now()}`,
+        batchId: contextInfo.batch,
         batch: batchName,
+        departmentId: contextInfo.department,
         department: deptName,
+        classId: contextInfo.class,
         class: className,
         semester: contextInfo.semester,
         subject: contextInfo.subject,

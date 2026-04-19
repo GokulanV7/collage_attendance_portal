@@ -63,7 +63,6 @@ export default function StudentProfilePage() {
       router.push('/admin/login');
       return;
     }
-    const adminDept = safeSessionStorage.getItem('adminDeptId') || 'Overall';
 
     // Find all records for this student
     const studentRecords: AttendanceSubmission[] = [];
