@@ -20,19 +20,22 @@ export const Select: React.FC<SelectProps> = ({
   required = false,
   error,
 }) => {
+  const selectId = `select-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-neutral-secondary mb-2">
+      <label htmlFor={selectId} className="mb-2 block text-sm font-medium text-neutral-secondary">
         {label}
         {required && <span className="text-status-danger ml-1">*</span>}
       </label>
       <select
+        id={selectId}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         style={{ caretColor: appTheme.brand.secondary }}
-        className={`w-full px-4 py-3 border rounded-xl bg-brand-surface text-neutral-primary focus:outline-none focus:ring-2 focus:ring-brand-secondary focus:border-brand-secondary ${
+        className={`ui-focus-ring w-full rounded-2xl border bg-brand-surface px-4 py-3 text-base text-neutral-primary ${
           error ? "border-status-danger text-status-danger" : "border-neutral-border"
-        } text-base`}
+        }`}
         required={required}
       >
         <option value="">{placeholder}</option>

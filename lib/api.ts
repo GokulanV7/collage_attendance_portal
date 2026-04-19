@@ -78,4 +78,48 @@ export const api = {
       `/attendance/by-section?year=${year}&department=${dept}&class=${cls}&section=${section}`,
     );
   },
+
+  async getAttendanceSections(year: string, department: string) {
+    return request(
+      `/attendance/sections?year=${encodeURIComponent(year)}&department=${encodeURIComponent(department)}`,
+    );
+  },
+
+  async getAttendanceSubjects(department: string) {
+    return request(`/attendance/subjects?department=${encodeURIComponent(department)}`);
+  },
+
+  async getSubjectAttendanceStatus(
+    year: string,
+    department: string,
+    section: string,
+    date: string,
+  ) {
+    return request(
+      `/attendance/subject-status?year=${encodeURIComponent(year)}&department=${encodeURIComponent(department)}&section=${encodeURIComponent(section)}&date=${encodeURIComponent(date)}`,
+    );
+  },
+
+  async getAttendanceDetail(
+    year: string,
+    department: string,
+    section: string,
+    subjectCode: string,
+    date: string,
+  ) {
+    return request(
+      `/attendance/detail?year=${encodeURIComponent(year)}&department=${encodeURIComponent(department)}&section=${encodeURIComponent(section)}&subjectCode=${encodeURIComponent(subjectCode)}&date=${encodeURIComponent(date)}`,
+    );
+  },
+
+  async getOverallAttendanceStats(
+    year: string,
+    department: string,
+    section: string,
+    subjectCode: string,
+  ) {
+    return request(
+      `/attendance/overall-stats?year=${encodeURIComponent(year)}&department=${encodeURIComponent(department)}&section=${encodeURIComponent(section)}&subjectCode=${encodeURIComponent(subjectCode)}`,
+    );
+  },
 };

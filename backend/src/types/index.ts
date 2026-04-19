@@ -34,10 +34,14 @@ export interface Admin {
 export interface AttendanceRecord {
   id: string;
   staffId: string;
+  staffName?: string;
   year: string;
   department: string;
   class: string;
   section: string;
+  semester?: string;
+  subject?: string;
+  subjectCode?: string;
   date: string; // YYYY-MM-DD
   attendance: {
     [studentId: string]: "present" | "absent" | "on-duty";
@@ -62,9 +66,20 @@ export interface LoginRequest {
 
 export interface SubmitAttendanceRequest {
   staffId: string;
+  staffName?: string;
   year: string;
   department: string;
   class: string;
-  section: string;
+  section?: string;
+  semester?: string;
+  subject?: string;
+  subjectCode?: string;
+  date?: string;
   attendance: { [key: string]: string };
+  attendanceList?: Array<{
+    studentId?: string;
+    studentName: string;
+    rollNo: string;
+    status: string;
+  }>;
 }

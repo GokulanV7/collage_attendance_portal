@@ -28,13 +28,16 @@ export const Input: React.FC<InputProps> = ({
   disabled = false,
   onKeyPress,
 })  => {
+  const inputId = `input-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
   return (
     <div className="w-full">
-      <label className="block text-sm font-medium text-neutral-secondary mb-2">
+      <label htmlFor={inputId} className="mb-2 block text-sm font-medium text-neutral-secondary">
         {label}
         {required && <span className="text-status-danger ml-1">*</span>}
       </label>
       <input
+        id={inputId}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -45,9 +48,9 @@ export const Input: React.FC<InputProps> = ({
         min={min}
         max={max}
         style={{ caretColor: appTheme.brand.secondary }}
-        className={`w-full px-4 py-3 border rounded-xl bg-brand-surface text-neutral-primary placeholder:text-neutral-muted focus:outline-none focus:ring-2 focus:ring-brand-secondary focus:border-brand-secondary transition disabled:opacity-60 disabled:cursor-not-allowed ${
+        className={`ui-focus-ring w-full rounded-2xl border bg-brand-surface px-4 py-3 text-base text-neutral-primary placeholder:text-neutral-muted disabled:cursor-not-allowed disabled:opacity-60 ${
           error ? "border-status-danger text-status-danger" : "border-neutral-border"
-        } text-base`}
+        }`}
       />
       {error && <p className="mt-1 text-sm text-status-danger">{error}</p>}
     </div>

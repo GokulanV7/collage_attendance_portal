@@ -16,11 +16,10 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ deptName, onSearch }) => {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-neutral-border flex items-center justify-between px-6">
-      {/* Left - Breadcrumb / Department */}
+    <header className="ui-panel flex min-h-16 flex-wrap items-center justify-between gap-4 rounded-2xl px-4 py-3 sm:px-6">
       <div className="flex items-center gap-4">
         <div>
-          <h1 className="text-lg font-semibold text-neutral-primary">
+          <h1 className="text-lg font-semibold text-neutral-primary" style={{ fontFamily: "var(--font-space-grotesk), sans-serif" }}>
             {deptName || "Admin Dashboard"}
           </h1>
           <p className="text-xs text-neutral-secondary">
@@ -29,8 +28,7 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ deptName, onSearch }) => {
         </div>
       </div>
 
-      {/* Center - Search */}
-      <div className="flex-1 max-w-xl mx-8">
+      <div className="w-full max-w-xl sm:mx-0 sm:flex-1">
         <div className="relative">
           <svg
             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-muted"
@@ -50,13 +48,12 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({ deptName, onSearch }) => {
             placeholder="Search students, roll numbers..."
             value={searchQuery}
             onChange={handleSearch}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-xl text-sm text-neutral-primary placeholder-neutral-muted focus:outline-none focus:ring-2 focus:ring-brand-secondary/50"
+            className="ui-focus-ring w-full rounded-xl border border-neutral-border bg-gray-50 py-2.5 pl-10 pr-4 text-sm text-neutral-primary placeholder-neutral-muted"
           />
         </div>
       </div>
 
-      {/* Right - Spacer */}
-      <div className="w-8"></div>
+      <div className="hidden w-8 lg:block"></div>
     </header>
   );
 };

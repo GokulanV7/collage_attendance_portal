@@ -33,7 +33,7 @@ router.get("/structure", (_req: Request, res: Response) => {
   try {
     const structure = {
       years: ["2021-2025", "2022-2026", "2023-2027"],
-      departments: ["CSE", "IT", "ECE", "ME"],
+      departments: ["CSE", "IT", "ECE", "ME", "AIML"],
       classes: ["A", "B", "C"],
       sections: ["1", "2"],
       studentsPerSection: 20,
