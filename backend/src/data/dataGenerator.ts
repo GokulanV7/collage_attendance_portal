@@ -1,5 +1,38 @@
 import { Student, Staff, Admin } from "../types";
 
+export const SUBJECTS_BY_DEPARTMENT: Record<string, Array<{ code: string; name: string }>> = {
+  CSE: [
+    { code: "CS301", name: "Operating Systems" },
+    { code: "CS302", name: "Database Management Systems" },
+    { code: "CS303", name: "Computer Networks" },
+    { code: "CS304", name: "Software Engineering" },
+  ],
+  IT: [
+    { code: "IT301", name: "Web Technologies" },
+    { code: "IT302", name: "Cloud Computing" },
+    { code: "IT303", name: "Information Security" },
+    { code: "IT304", name: "Design and Analysis of Algorithms" },
+  ],
+  ECE: [
+    { code: "EC301", name: "Digital Signal Processing" },
+    { code: "EC302", name: "VLSI Design" },
+    { code: "EC303", name: "Digital Communication" },
+    { code: "EC304", name: "Microelectronics" },
+  ],
+  ME: [
+    { code: "ME301", name: "Thermal Engineering" },
+    { code: "ME302", name: "Machine Design" },
+    { code: "ME303", name: "Fluid Mechanics" },
+    { code: "ME304", name: "Industrial Management" },
+  ],
+  AIML: [
+    { code: "AI301", name: "Machine Learning" },
+    { code: "AI302", name: "Deep Learning" },
+    { code: "AI303", name: "Natural Language Processing" },
+    { code: "AI304", name: "Computer Vision" },
+  ],
+};
+
 const firstNames = [
   "Arun",
   "Priya",
@@ -46,7 +79,7 @@ export const dataGenerator = {
   generateStudents: (): Student[] => {
     const students: Student[] = [];
     const years = ["2021-2025", "2022-2026", "2023-2027"];
-    const depts = ["CSE", "IT", "ECE", "ME"];
+    const depts = ["CSE", "IT", "ECE", "ME", "AIML"];
     const classes = ["A", "B", "C"];
     const sections = ["1", "2"];
 
@@ -132,6 +165,15 @@ export const dataGenerator = {
         email: "akshay@college.edu",
         department: "ME",
         staffId: "ST005",
+        password: "password123",
+        role: "staff",
+      },
+      {
+        id: "ST006",
+        name: "Prof. Harini Raman",
+        email: "harini@college.edu",
+        department: "AIML",
+        staffId: "ST006",
         password: "password123",
         role: "staff",
       },

@@ -1,559 +1,380 @@
 "use client";
 
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminLayout } from "@/components/admin";
-import { useAttendance } from "@/context/AttendanceContext";
-import { getBatches, getClassesByDepartment, getSubjectsByDepartment, getStudentsByClass } from "@/data/mockDatabase";
-import { Class, Subject } from "@/types";
-import { generateAttendanceReport, AttendanceRecord as ReportAttendanceRecord } from "@/utils/excelGenerator";
+import { api } from "@/lib/api";
 
-type View = "classes" | "subjects" | "attendance";
-
-// Normalize batch string: replace em-dash with hyphen for consistent comparison
-const normalizeBatch = (b: string): string => b.replace(/\u2013/g, "-");
-const normalizeText = (value: string): string => value.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-const doesSubmissionMatchDepartment = (submissionDept: string, submissionDeptId: string | undefined, adminDeptId: string, adminDeptName: string): boolean => {
-  if (submissionDeptId && submissionDeptId === adminDeptId) {
-    return true;
-  }
-
-  const normalizedSubmissionDept = normalizeText(submissionDept);
-  return (
-    normalizedSubmissionDept === normalizeText(adminDeptName) ||
-    normalizedSubmissionDept === normalizeText(adminDeptId)
-  );
+type SubjectOption = {
+  code: string;
+  name: string;
 };
 
-export default function AdminView() {
-  const { submissions } = useAttendance();
+type StudentOverallStats = {
+  student_id: string;
+  student_name: string;
+  roll_no: string;
+  total_classes: number;
+  present_count: number;
+  absent_count: number;
+  attendance_percentage: number;
+};
 
-  const [adminDeptId, setAdminDeptId] = useState("");
-  const [adminDeptName, setAdminDeptName] = useState("");
+type SortField = "name" | "percentage";
+
+type StructureResponse = {
+  years: string[];
+  departments: string[];
+};
+
+const percentClass = (value: number) => {
+  if (value < 75) return "text-red-700 bg-red-100";
+  if (value < 90) return "text-amber-700 bg-amber-100";
+  return "text-emerald-700 bg-emerald-100";
+};
+
+export default function AdminViewOverallAttendance() {
+  const [batchOptions, setBatchOptions] = useState<string[]>([]);
+  const [departmentOptions, setDepartmentOptions] = useState<string[]>([]);
+  const [sectionOptions, setSectionOptions] = useState<string[]>([]);
+  const [subjectOptions, setSubjectOptions] = useState<SubjectOption[]>([]);
+
   const [selectedBatch, setSelectedBatch] = useState("");
-  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
-  const [currentView, setCurrentView] = useState<View>("classes");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
+  const [selectedSubjectCode, setSelectedSubjectCode] = useState("");
 
-  const batches = getBatches();
+  const [stats, setStats] = useState<StudentOverallStats[]>([]);
+  const [totalClassesConducted, setTotalClassesConducted] = useState(0);
+
+  const [loadingInit, setLoadingInit] = useState(true);
+  const [loadingFilters, setLoadingFilters] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [error, setError] = useState("");
+
+  const [sortField, setSortField] = useState<SortField>("percentage");
+  const [sortAsc, setSortAsc] = useState(false);
 
   useEffect(() => {
-    const deptId = sessionStorage.getItem("adminDeptId") || "";
-    const deptName = sessionStorage.getItem("adminDeptName") || "";
-    setAdminDeptId(deptId);
-    setAdminDeptName(deptName);
-    if (batches.length > 0) setSelectedBatch(batches[0].id);
+    const adminDeptId = sessionStorage.getItem("adminDeptId") || "";
+
+    const loadInitData = async () => {
+      try {
+        const structureRes = await api.getDataStructure();
+        const structure = structureRes?.data as StructureResponse;
+        const years = structure?.years || [];
+        const departments = structure?.departments || [];
+
+        setBatchOptions(years);
+        setDepartmentOptions(departments);
+
+        if (years.length > 0) setSelectedBatch(years[0]);
+
+        if (adminDeptId && departments.includes(adminDeptId)) {
+          setSelectedDepartment(adminDeptId);
+        } else if (departments.length > 0) {
+          setSelectedDepartment(departments[0]);
+        }
+      } catch (e: any) {
+        setError(e?.message || "Failed to initialize overall attendance view");
+      } finally {
+        setLoadingInit(false);
+      }
+    };
+
+    void loadInitData();
   }, []);
 
-  // Get classes for selected batch + department
-  const classes = useMemo(() => {
-    if (!selectedBatch || !adminDeptId) return [];
-    return getClassesByDepartment(selectedBatch, adminDeptId);
-  }, [selectedBatch, adminDeptId]);
+  useEffect(() => {
+    if (!selectedBatch || !selectedDepartment) return;
 
-  // Get subjects for department
-  const subjects = useMemo(() => {
-    if (!adminDeptId) return [];
-    return getSubjectsByDepartment(adminDeptId);
-  }, [adminDeptId]);
+    const loadFilterData = async () => {
+      setLoadingFilters(true);
+      setError("");
+      setSelectedSection("");
+      setSelectedSubjectCode("");
+      setStats([]);
+      setTotalClassesConducted(0);
 
-  // Filter submissions for the currently selected context
-  const contextSubmissions = useMemo(() => {
-    const normalizedBatch = normalizeBatch(selectedBatch);
-    return submissions.filter((s) => {
-      if (normalizeBatch(s.batch) !== normalizedBatch) return false;
-      if (!doesSubmissionMatchDepartment(s.department, s.departmentId, adminDeptId, adminDeptName)) return false;
-      if (selectedClass && s.class !== selectedClass.name) return false;
-      if (selectedSubject && s.subject !== selectedSubject.name) return false;
-      return true;
-    });
-  }, [submissions, selectedBatch, adminDeptName, adminDeptId, selectedClass, selectedSubject]);
+      try {
+        const [sectionsRes, subjectsRes] = await Promise.all([
+          api.getAttendanceSections(selectedBatch, selectedDepartment),
+          api.getAttendanceSubjects(selectedDepartment),
+        ]);
 
-  // For classes view: count periods per class
-  const classStats = useMemo(() => {
-    const normalizedBatch = normalizeBatch(selectedBatch);
-    const map = new Map<string, { sessions: number; totalRecords: number; presentCount: number }>();
-    submissions
-      .filter((s) => normalizeBatch(s.batch) === normalizedBatch && doesSubmissionMatchDepartment(s.department, s.departmentId, adminDeptId, adminDeptName))
-      .forEach((s) => {
-        const cur = map.get(s.class) || { sessions: 0, totalRecords: 0, presentCount: 0 };
-        const periodCount = s.periods.length || 1;
-        cur.sessions += periodCount;
-        s.attendance.forEach((a) => {
-          cur.totalRecords += periodCount;
-          if (a.status === "Present" || a.status === "On-Duty") cur.presentCount += periodCount;
-        });
-        map.set(s.class, cur);
-      });
-    return map;
-  }, [submissions, selectedBatch, adminDeptName, adminDeptId]);
-
-  // For subjects view: count periods per subject for selected class
-  const subjectStats = useMemo(() => {
-    if (!selectedClass) return new Map<string, { sessions: number; totalRecords: number; presentCount: number }>();
-    const normalizedBatch = normalizeBatch(selectedBatch);
-    const map = new Map<string, { sessions: number; totalRecords: number; presentCount: number }>();
-    submissions
-      .filter((s) => normalizeBatch(s.batch) === normalizedBatch && doesSubmissionMatchDepartment(s.department, s.departmentId, adminDeptId, adminDeptName) && s.class === selectedClass.name)
-      .forEach((s) => {
-        const cur = map.get(s.subject) || { sessions: 0, totalRecords: 0, presentCount: 0 };
-        const periodCount = s.periods.length || 1;
-        cur.sessions += periodCount;
-        s.attendance.forEach((a) => {
-          cur.totalRecords += periodCount;
-          if (a.status === "Present" || a.status === "On-Duty") cur.presentCount += periodCount;
-        });
-        map.set(s.subject, cur);
-      });
-    return map;
-  }, [submissions, selectedBatch, adminDeptName, adminDeptId, selectedClass]);
-
-  // For attendance view: per-student stats (includes ALL students in the class)
-  const studentAttendanceData = useMemo(() => {
-    if (!selectedClass || !selectedSubject || !adminDeptId || !selectedBatch) return [];
-
-    // Get all students from the class
-    const allStudents = getStudentsByClass(selectedBatch, adminDeptId, selectedClass.id);
-
-    // Build attendance map from submissions
-    // Each submission covers N periods, so multiply counts by the number of periods
-    const attendanceMap = new Map<string, { name: string; rollNo: string; present: number; absent: number; onDuty: number; total: number }>();
-
-    contextSubmissions.forEach((s) => {
-      const periodCount = s.periods.length || 1;
-      s.attendance.forEach((a) => {
-        const cur = attendanceMap.get(a.rollNo) || { name: a.studentName, rollNo: a.rollNo, present: 0, absent: 0, onDuty: 0, total: 0 };
-        cur.total += periodCount;
-        if (a.status === "Present") cur.present += periodCount;
-        else if (a.status === "Absent") cur.absent += periodCount;
-        else if (a.status === "On-Duty") cur.onDuty += periodCount;
-        attendanceMap.set(a.rollNo, cur);
-      });
-    });
-
-    // Merge: include all students from class, filling in zeros for those without attendance records
-    const merged = allStudents.map((student) => {
-      const record = attendanceMap.get(student.rollNo);
-      if (record) return record;
-      return { name: student.name, rollNo: student.rollNo, present: 0, absent: 0, onDuty: 0, total: 0 };
-    });
-
-    // Also add any students from attendance records that aren't in the current class list (edge case)
-    attendanceMap.forEach((record, rollNo) => {
-      if (!allStudents.find((s) => s.rollNo === rollNo)) {
-        merged.push(record);
+        setSectionOptions(Array.isArray(sectionsRes?.data) ? sectionsRes.data : []);
+        setSubjectOptions(Array.isArray(subjectsRes?.data) ? subjectsRes.data : []);
+      } catch (e: any) {
+        setError(e?.message || "Failed to load sections/subjects");
+      } finally {
+        setLoadingFilters(false);
       }
+    };
+
+    void loadFilterData();
+  }, [selectedBatch, selectedDepartment]);
+
+  useEffect(() => {
+    if (!selectedBatch || !selectedDepartment || !selectedSection || !selectedSubjectCode) {
+      setStats([]);
+      setTotalClassesConducted(0);
+      return;
+    }
+
+    const loadOverallStats = async () => {
+      setLoadingStats(true);
+      setError("");
+      try {
+        const res = await api.getOverallAttendanceStats(
+          selectedBatch,
+          selectedDepartment,
+          selectedSection,
+          selectedSubjectCode,
+        );
+
+        setStats(Array.isArray(res?.data?.students) ? res.data.students : []);
+        setTotalClassesConducted(Number(res?.data?.total_classes_conducted || 0));
+      } catch (e: any) {
+        setError(e?.message || "Failed to load overall attendance stats");
+        setStats([]);
+        setTotalClassesConducted(0);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    void loadOverallStats();
+  }, [selectedBatch, selectedDepartment, selectedSection, selectedSubjectCode]);
+
+  const selectedSubject = useMemo(
+    () => subjectOptions.find((subject) => subject.code === selectedSubjectCode) || null,
+    [selectedSubjectCode, subjectOptions],
+  );
+
+  const sortedStats = useMemo(() => {
+    const next = [...stats];
+    next.sort((a, b) => {
+      if (sortField === "name") {
+        const result = a.student_name.localeCompare(b.student_name);
+        return sortAsc ? result : -result;
+      }
+      const result = a.attendance_percentage - b.attendance_percentage;
+      return sortAsc ? result : -result;
     });
+    return next;
+  }, [stats, sortField, sortAsc]);
 
-    return merged.sort((a, b) => a.rollNo.localeCompare(b.rollNo));
-  }, [contextSubmissions, selectedClass, selectedSubject, adminDeptId, selectedBatch]);
+  const lowAttendanceCount = useMemo(
+    () => stats.filter((student) => student.attendance_percentage < 75).length,
+    [stats],
+  );
 
-  const filteredStudents = useMemo(() => {
-    if (!searchQuery) return studentAttendanceData;
-    const q = searchQuery.toLowerCase();
-    return studentAttendanceData.filter(
-      (s) => s.name.toLowerCase().includes(q) || s.rollNo.toLowerCase().includes(q)
-    );
-  }, [studentAttendanceData, searchQuery]);
+  const avgAttendance = useMemo(() => {
+    if (stats.length === 0) return 0;
+    const sum = stats.reduce((acc, student) => acc + student.attendance_percentage, 0);
+    return Number((sum / stats.length).toFixed(2));
+  }, [stats]);
 
-  // Navigation
-  const handleClassClick = (cls: Class) => {
-    setSelectedClass(cls);
-    setSelectedSubject(null);
-    setCurrentView("subjects");
-    setSearchQuery("");
-  };
-
-  const handleSubjectClick = (sub: Subject) => {
-    setSelectedSubject(sub);
-    setCurrentView("attendance");
-    setSearchQuery("");
-  };
-
-  const handleBack = () => {
-    if (currentView === "attendance") {
-      setSelectedSubject(null);
-      setCurrentView("subjects");
-      setSearchQuery("");
-    } else if (currentView === "subjects") {
-      setSelectedClass(null);
-      setCurrentView("classes");
-      setSearchQuery("");
+  const toggleSort = (field: SortField) => {
+    if (field === sortField) {
+      setSortAsc((prev) => !prev);
+      return;
     }
-  };
-
-  const handleBatchChange = (val: string) => {
-    setSelectedBatch(val);
-    setSelectedClass(null);
-    setSelectedSubject(null);
-    setCurrentView("classes");
-    setSearchQuery("");
-  };
-
-  const handleGenerateReport = useCallback(() => {
-    if (currentView !== "attendance") return;
-
-    const reportRows: ReportAttendanceRecord[] = [];
-    contextSubmissions.forEach((submission) => {
-      submission.attendance.forEach((entry) => {
-        reportRows.push({
-          date: submission.date,
-          batch: submission.batch,
-          department: submission.department,
-          className: submission.class,
-          semester: submission.semester,
-          period: submission.periods.map((period) => period.name).join(", "),
-          staffId: submission.staffId,
-          staffName: submission.staffName,
-          rollNo: entry.rollNo,
-          studentName: entry.studentName,
-          status: entry.status,
-        });
-      });
-    });
-
-    generateAttendanceReport(reportRows, "attendance_report.xlsx");
-  }, [currentView, contextSubmissions]);
-
-  const getAttendanceColor = (pct: number) => {
-    if (pct >= 90) return "text-emerald-600 bg-emerald-50";
-    if (pct >= 75) return "text-blue-600 bg-blue-50";
-    if (pct >= 60) return "text-amber-600 bg-amber-50";
-    return "text-red-600 bg-red-50";
-  };
-
-  const getStatusLabel = (pct: number) => {
-    if (pct >= 90) return "Excellent";
-    if (pct >= 75) return "Good";
-    if (pct >= 60) return "Warning";
-    return "Critical";
-  };
-
-  // Breadcrumb
-  const breadcrumb = () => {
-    const items: { label: string; onClick?: () => void }[] = [
-      {
-        label: `${adminDeptId} - Classes`,
-        onClick: currentView !== "classes"
-          ? () => { setSelectedClass(null); setSelectedSubject(null); setCurrentView("classes"); setSearchQuery(""); }
-          : undefined,
-      },
-    ];
-    if (selectedClass) {
-      items.push({
-        label: `Section ${selectedClass.name}`,
-        onClick: currentView === "attendance"
-          ? () => { setSelectedSubject(null); setCurrentView("subjects"); setSearchQuery(""); }
-          : undefined,
-      });
-    }
-    if (selectedSubject) {
-      items.push({ label: selectedSubject.name });
-    }
-    return items;
+    setSortField(field);
+    setSortAsc(field === "name");
   };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Attendance Records</h1>
-            <p className="text-sm text-gray-500 mt-1">{adminDeptName}</p>
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Dashboard &gt; Attendance &gt; {selectedSection || "Section"} &gt; {selectedSubject?.name || "Subject"}
+          </p>
+          <h1 className="mt-2 text-2xl font-bold text-gray-900">Overall Attendance Analytics</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Batch -&gt; Department -&gt; Section -&gt; Subject -&gt; Overall Stats
+          </p>
+        </div>
+
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
           </div>
-          <div className="flex items-center gap-3">
-            <label className="text-sm font-medium text-gray-600">Batch:</label>
+        )}
+
+        <div className="grid grid-cols-1 gap-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm md:grid-cols-2 xl:grid-cols-4">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Batch</label>
             <select
               value={selectedBatch}
-              onChange={(e) => handleBatchChange(e.target.value)}
-              className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-secondary/30 focus:border-brand-secondary"
+              onChange={(e) => setSelectedBatch(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-brand-secondary focus:outline-none"
+              disabled={loadingInit || loadingFilters}
             >
-              {batches.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
+              {batchOptions.map((batch) => (
+                <option key={batch} value={batch}>
+                  {batch}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Department</label>
+            <select
+              value={selectedDepartment}
+              onChange={(e) => setSelectedDepartment(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-brand-secondary focus:outline-none"
+              disabled={loadingInit || loadingFilters}
+            >
+              {departmentOptions.map((department) => (
+                <option key={department} value={department}>
+                  {department}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Section</label>
+            <select
+              value={selectedSection}
+              onChange={(e) => {
+                setSelectedSection(e.target.value);
+                setStats([]);
+              }}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-brand-secondary focus:outline-none"
+              disabled={loadingFilters || sectionOptions.length === 0}
+            >
+              <option value="">Select section</option>
+              {sectionOptions.map((section) => (
+                <option key={section} value={section}>
+                  {section}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500">Subject</label>
+            <select
+              value={selectedSubjectCode}
+              onChange={(e) => {
+                setSelectedSubjectCode(e.target.value);
+                setStats([]);
+              }}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:border-brand-secondary focus:outline-none"
+              disabled={!selectedSection || subjectOptions.length === 0}
+            >
+              <option value="">Select subject</option>
+              {subjectOptions.map((subject) => (
+                <option key={subject.code} value={subject.code}>
+                  {subject.name} ({subject.code})
+                </option>
               ))}
             </select>
           </div>
         </div>
 
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm">
-          {breadcrumb().map((item, idx) => (
-            <React.Fragment key={idx}>
-              {idx > 0 && (
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              )}
-              {item.onClick ? (
-                <button onClick={item.onClick} className="text-brand-secondary hover:underline font-medium">
-                  {item.label}
-                </button>
-              ) : (
-                <span className="text-gray-700 font-semibold">{item.label}</span>
-              )}
-            </React.Fragment>
-          ))}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Total Classes Conducted</p>
+            <p className="mt-2 text-2xl font-bold text-gray-900">{totalClassesConducted}</p>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Average Attendance</p>
+            <p className="mt-2 text-2xl font-bold text-gray-900">{avgAttendance}%</p>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Low Attendance (&lt;75%)</p>
+            <p className="mt-2 text-2xl font-bold text-red-600">{lowAttendanceCount}</p>
+          </div>
         </div>
 
-        {/* Back button */}
-        {currentView !== "classes" && (
-          <button
-            onClick={handleBack}
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-        )}
-
-        {/* ===== CLASSES VIEW ===== */}
-        {currentView === "classes" && (
-          <div>
-            {classes.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-                <h3 className="text-lg font-semibold text-gray-700">No Classes Found</h3>
-                <p className="text-sm text-gray-400 mt-1">No classes available for this batch and department.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {classes.map((cls) => {
-                  const stats = classStats.get(cls.name);
-                  const pct = stats && stats.totalRecords > 0
-                    ? (stats.presentCount / stats.totalRecords) * 100
-                    : null;
-                  return (
-                    <button
-                      key={cls.id}
-                      onClick={() => handleClassClick(cls)}
-                      className="bg-white rounded-xl border border-gray-100 p-6 text-left hover:shadow-lg hover:border-brand-secondary/30 transition-all duration-200 group"
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="w-12 h-12 bg-brand-primary/10 rounded-xl flex items-center justify-center group-hover:bg-brand-primary/20 transition-colors">
-                          <svg className="w-6 h-6 text-brand-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                        </div>
-                        <svg className="w-5 h-5 text-gray-400 group-hover:text-brand-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                      <h3 className="text-lg font-bold text-gray-900">Section {cls.name}</h3>
-                      <p className="text-xs text-gray-500 mt-1">{adminDeptId} • {selectedBatch}</p>
-                      <div className="mt-4 pt-4 border-t border-gray-50">
-                        {stats ? (
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">{stats.sessions} session{stats.sessions !== 1 ? "s" : ""}</span>
-                            <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${getAttendanceColor(pct!)}`}>
-                              {pct!.toFixed(1)}%
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400">No attendance data yet</span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ===== SUBJECTS VIEW ===== */}
-        {currentView === "subjects" && selectedClass && (
-          <div>
-            {subjects.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <h3 className="text-lg font-semibold text-gray-700">No Subjects Found</h3>
-                <p className="text-sm text-gray-400 mt-1">No subjects available for this department.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {subjects.map((sub) => {
-                  const stats = subjectStats.get(sub.name);
-                  const pct = stats && stats.totalRecords > 0
-                    ? (stats.presentCount / stats.totalRecords) * 100
-                    : null;
-                  return (
-                    <button
-                      key={sub.id}
-                      onClick={() => handleSubjectClick(sub)}
-                      className="bg-white rounded-xl border border-gray-100 p-5 text-left hover:shadow-lg hover:border-brand-secondary/30 transition-all duration-200 group"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                          </svg>
-                        </div>
-                        <svg className="w-4 h-4 text-gray-400 group-hover:text-brand-secondary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                      <h4 className="text-sm font-bold text-gray-900 leading-snug">{sub.name}</h4>
-                      <p className="text-xs text-gray-400 mt-1">{sub.code}</p>
-                      <div className="mt-3 pt-3 border-t border-gray-50">
-                        {stats ? (
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">{stats.sessions} session{stats.sessions !== 1 ? "s" : ""}</span>
-                            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getAttendanceColor(pct!)}`}>
-                              {pct!.toFixed(1)}%
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xs text-gray-400">No data yet</span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ===== ATTENDANCE VIEW ===== */}
-        {currentView === "attendance" && selectedClass && selectedSubject && (
-          <div className="space-y-4">
-            {/* Summary cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {(() => {
-                const totalStudents = studentAttendanceData.length;
-                const totalSessions = contextSubmissions.reduce((sum, s) => sum + (s.periods.length || 1), 0);
-                const avgPct = totalStudents > 0
-                  ? studentAttendanceData.reduce((sum, s) => sum + (s.total > 0 ? (s.present + s.onDuty) / s.total * 100 : 0), 0) / totalStudents
-                  : 0;
-                const belowThreshold = studentAttendanceData.filter(
-                  (s) => s.total > 0 && (s.present + s.onDuty) / s.total * 100 < 75
-                ).length;
-
-                return (
-                  <>
-                    <div className="bg-white rounded-xl border border-gray-100 p-4">
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Students</p>
-                      <p className="text-2xl font-bold text-gray-900 mt-1">{totalStudents}</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-gray-100 p-4">
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Sessions</p>
-                      <p className="text-2xl font-bold text-gray-900 mt-1">{totalSessions}</p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-gray-100 p-4">
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Avg Attendance</p>
-                      <p className={`text-2xl font-bold mt-1 ${avgPct >= 75 ? "text-emerald-600" : "text-red-600"}`}>
-                        {avgPct.toFixed(1)}%
-                      </p>
-                    </div>
-                    <div className="bg-white rounded-xl border border-gray-100 p-4">
-                      <p className="text-xs text-gray-500 uppercase tracking-wide">Below 75%</p>
-                      <p className={`text-2xl font-bold mt-1 ${belowThreshold > 0 ? "text-red-600" : "text-emerald-600"}`}>
-                        {belowThreshold}
-                      </p>
-                    </div>
-                  </>
-                );
-              })()}
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Student-wise Overall Stats</h2>
+              <p className="text-xs text-gray-500">Backend aggregated analytics view</p>
             </div>
-
-            {/* Search + Export bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white rounded-xl border border-gray-100 p-4">
-              <div className="relative flex-1 max-w-sm">
-                <svg className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by name or roll no..."
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-secondary/30 focus:border-brand-secondary"
-                />
-              </div>
+            <div className="flex gap-2">
               <button
-                onClick={handleGenerateReport}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
+                type="button"
+                onClick={() => toggleSort("name")}
+                className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                  sortField === "name"
+                    ? "border-brand-secondary bg-brand-primary/10 text-brand-secondary"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
-                </svg>
-                Download Excel
+                Sort Name {sortField === "name" ? (sortAsc ? "↑" : "↓") : ""}
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleSort("percentage")}
+                className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                  sortField === "percentage"
+                    ? "border-brand-secondary bg-brand-primary/10 text-brand-secondary"
+                    : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                Sort % {sortField === "percentage" ? (sortAsc ? "↑" : "↓") : ""}
               </button>
             </div>
-
-            {/* Student table */}
-            {filteredStudents.length === 0 ? (
-              <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
-                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
-                <h3 className="text-lg font-semibold text-gray-700">No Attendance Records</h3>
-                <p className="text-sm text-gray-400 mt-1">
-                  No attendance has been marked for this subject yet.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-100 bg-gray-50/50">
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">#</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Roll No</th>
-                        <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Student Name</th>
-                        <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Present</th>
-                        <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Absent</th>
-                        <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">On-Duty</th>
-                        <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Total</th>
-                        <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Attendance %</th>
-                        <th className="text-center px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredStudents.map((student, idx) => {
-                        const pct = student.total > 0
-                          ? (student.present + student.onDuty) / student.total * 100
-                          : 0;
-                        return (
-                          <tr
-                            key={student.rollNo}
-                            className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
-                          >
-                            <td className="px-5 py-3.5 text-sm text-gray-400">{idx + 1}</td>
-                            <td className="px-5 py-3.5 text-sm font-mono font-medium text-gray-700">{student.rollNo}</td>
-                            <td className="px-5 py-3.5 text-sm font-medium text-gray-900">{student.name}</td>
-                            <td className="px-5 py-3.5 text-sm text-center text-emerald-600 font-semibold">{student.present}</td>
-                            <td className="px-5 py-3.5 text-sm text-center text-red-600 font-semibold">{student.absent}</td>
-                            <td className="px-5 py-3.5 text-sm text-center text-blue-600 font-semibold">{student.onDuty}</td>
-                            <td className="px-5 py-3.5 text-sm text-center text-gray-700 font-medium">{student.total}</td>
-                            <td className="px-5 py-3.5 text-center">
-                              <span className={`text-sm font-bold px-2.5 py-1 rounded-full ${getAttendanceColor(pct)}`}>
-                                {pct.toFixed(1)}%
-                              </span>
-                            </td>
-                            <td className="px-5 py-3.5 text-center">
-                              <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${getAttendanceColor(pct)}`}>
-                                {getStatusLabel(pct)}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
           </div>
-        )}
+
+          {!selectedSection || !selectedSubjectCode ? (
+            <div className="px-5 py-10 text-center text-sm text-gray-500">
+              Select batch, department, section and subject to view analytics.
+            </div>
+          ) : loadingStats ? (
+            <div className="px-5 py-10 text-center text-sm text-gray-500">Loading overall stats...</div>
+          ) : sortedStats.length === 0 ? (
+            <div className="px-5 py-10 text-center text-sm text-gray-500">
+              No attendance data found. Mark attendance first to see analytics.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-100 text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">Student Name</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">Total Classes</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">Present</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">Absent</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-600">Percentage</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 bg-white">
+                  {sortedStats.map((student) => {
+                    const isLow = student.attendance_percentage < 75;
+                    return (
+                      <tr key={student.student_id} className={isLow ? "bg-red-50/40" : ""}>
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-gray-900">{student.student_name}</div>
+                          <div className="text-xs text-gray-500">{student.roll_no}</div>
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">{student.total_classes}</td>
+                        <td className="px-4 py-3 text-emerald-700">{student.present_count}</td>
+                        <td className="px-4 py-3 text-red-700">{student.absent_count}</td>
+                        <td className="px-4 py-3">
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${percentClass(student.attendance_percentage)}`}>
+                            {student.attendance_percentage}%
+                          </span>
+                          {isLow && (
+                            <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">
+                              Low Attendance
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );

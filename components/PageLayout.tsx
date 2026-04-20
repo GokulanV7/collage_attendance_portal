@@ -13,25 +13,29 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   subtitle,
 }) => {
   return (
-    <main className="min-h-screen bg-brand-background px-3 py-4 sm:px-8 sm:py-10">
-      <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6">
+    <main className="min-h-screen px-3 py-4 sm:px-8 sm:py-10 lg:px-10">
+      <div className="mx-auto max-w-6xl space-y-5 sm:space-y-7">
         <Navbar />
 
-        {/* Page Title Section */}
         {(title || subtitle) && (
-          <div className="rounded-2xl border border-brand-secondary/20 bg-white shadow-sm px-4 sm:px-6 py-4">
+          <div className="ui-panel rounded-3xl px-5 py-5 sm:px-7 sm:py-6">
             {title && (
-              <h1 className="text-xl sm:text-2xl font-bold text-neutral-primary">
+              <h1
+                className="text-xl font-bold text-neutral-primary sm:text-3xl"
+                style={{ fontFamily: "var(--font-space-grotesk), sans-serif" }}
+              >
                 {title}
               </h1>
             )}
             {subtitle && (
-              <p className="text-sm text-neutral-secondary mt-1">{subtitle}</p>
+              <p className="mt-2 max-w-3xl text-sm text-neutral-secondary sm:text-base">
+                {subtitle}
+              </p>
             )}
           </div>
         )}
 
-        <section className="space-y-6">{children}</section>
+        <section className="space-y-6 sm:space-y-7">{children}</section>
       </div>
     </main>
   );

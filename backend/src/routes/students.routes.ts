@@ -11,10 +11,10 @@ router.get("/", (req: Request, res: Response) => {
 
     const students = MOCK_DATABASE.students.filter(
       (s) =>
-        s.year === year &&
-        s.department === department &&
-        s.class === cls &&
-        s.section === section,
+        (!year || s.year === year) &&
+        (!department || s.department === department) &&
+        (!cls || s.class === cls) &&
+        (!section || s.section === section),
     );
 
     return res.json({

@@ -12,6 +12,7 @@ import { getStudentsByClass, getBatches, getDepartments } from "@/data/mockDatab
 import { getPeriodConfig } from "@/data/periodConfigs";
 import { getPeriodRangeDisplay } from "@/utils/periodDetection";
 import { useAttendance } from "@/context/AttendanceContext";
+import { api } from "@/lib/api";
 import { Student, AttendanceStatus, AttendanceSubmission, Period } from "@/types";
 
 export default function StaffMarkAttendance() {
@@ -153,14 +154,38 @@ export default function StaffMarkAttendance() {
         attendance: attendanceRecords,
       };
 
-      // Save to context
-      addSubmission(submission);
+      const attendancePayload = students.reduce<Record<string, string>>((acc, student) => {
+        acc[student.rollNo] = (attendanceMap.get(student.id) || "Present").toLowerCase();
+        return acc;
+      }, {});
 
-      // Store for confirmation page
-      sessionStorage.setItem("lastSubmission", JSON.stringify(submission));
+      const payload = {
+        staffId,
+        staffName,
+        year: contextInfo.batch,
+        department: contextInfo.department,
+        class: className,
+        section: className,
+        semester: contextInfo.semester,
+        subject: contextInfo.subject,
+        subjectCode: contextInfo.subjectCode,
+        date: submission.date,
+        attendance: attendancePayload,
+        attendanceList: attendanceRecords,
+      };
 
-      // Navigate to confirmation
-      router.push("/staff/confirmation");
+      api
+        .submitAttendance(payload)
+        .then(() => {
+          addSubmission(submission);
+          sessionStorage.setItem("lastSubmission", JSON.stringify(submission));
+          router.push("/staff/confirmation");
+        })
+        .catch((error) => {
+          console.error("Failed to submit attendance:", error);
+          alert(error?.message || "Failed to submit attendance. Please try again.");
+          setIsLoading(false);
+        });
     }, 1500);
   };
 

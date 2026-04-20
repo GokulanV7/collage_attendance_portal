@@ -7,6 +7,8 @@ import { safeSessionStorage } from "@/utils/safeSessionStorage";
 
 interface SidebarProps {
   isCollapsed: boolean;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
   onToggle: () => void;
 }
 
@@ -58,7 +60,12 @@ const menuItems = [
   },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  isCollapsed,
+  isMobileOpen = false,
+  onCloseMobile,
+  onToggle,
+}) => {
   const pathname = usePathname();
   const router = useRouter();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -73,29 +80,47 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
 
   return (
     <>
+    {isMobileOpen && (
+      <button
+        type="button"
+        className="fixed inset-0 z-30 bg-black/40 lg:hidden"
+        aria-label="Close menu"
+        onClick={onCloseMobile}
+      />
+    )}
+
     <aside
-      className={`fixed left-0 top-0 z-40 h-screen bg-white border-r border-neutral-border transition-all duration-300 ${
+      className={`fixed left-0 top-0 z-40 h-screen border-r border-neutral-border bg-white/95 shadow-xl backdrop-blur transition-all duration-300 ${
         isCollapsed ? "w-16" : "w-64"
-      }`}
+      } ${
+        isMobileOpen ? "translate-x-0" : "-translate-x-full"
+      } lg:translate-x-0`}
     >
+      <div
+        className={`absolute inset-0 bg-gradient-to-b from-brand-primarySoft/70 to-transparent pointer-events-none ${
+          isCollapsed ? "opacity-50" : "opacity-100"
+        }`}
+      />
+
+      <div className="relative z-10 h-full">
       {/* Logo Section */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-neutral-border">
         {!isCollapsed && (
           <div className="flex items-center gap-2">
-            <img 
-              src="/College Logo.png" 
-              alt="Logo" 
-              className="w-8 h-8 rounded-lg object-contain"
+            <img
+              src="/College Logo.png"
+              alt="Logo"
+              className="h-8 w-8 rounded-lg object-contain"
             />
             <span className="font-bold text-neutral-primary">Admin Panel</span>
           </div>
         )}
         <button
           onClick={onToggle}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="rounded-lg p-2 transition-colors hover:bg-gray-100"
         >
           <svg
-            className={`w-5 h-5 text-neutral-secondary transition-transform ${
+            className={`h-5 w-5 text-neutral-secondary transition-transform ${
               isCollapsed ? "rotate-180" : ""
             }`}
             fill="none"
@@ -113,19 +138,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="p-4 space-y-2">
+      <nav className="space-y-2 p-4">
         {menuItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all ${
                 isActive
-                  ? "bg-brand-primary text-brand-secondary font-semibold"
+                  ? "bg-brand-primary text-brand-secondary font-semibold shadow-sm"
                   : "text-neutral-secondary hover:bg-gray-100 hover:text-neutral-primary"
               }`}
               title={isCollapsed ? item.label : undefined}
+              onClick={onCloseMobile}
             >
               {item.icon}
               {!isCollapsed && <span>{item.label}</span>}
@@ -135,7 +161,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
       </nav>
 
       {/* Bottom Section */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-border">
+      <div className="absolute bottom-0 left-0 right-0 border-t border-neutral-border p-4">
         <button
           onClick={() => setShowLogoutModal(true)}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-secondary hover:bg-gray-100 hover:text-neutral-primary transition-all"
@@ -145,6 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
           </svg>
           {!isCollapsed && <span>Exit Admin</span>}
         </button>
+      </div>
       </div>
     </aside>
 
