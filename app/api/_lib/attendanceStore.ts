@@ -1,5 +1,3 @@
-import { promises as fs } from "fs";
-import path from "path";
 import {
   getBatches,
   getClassesByDepartment,
@@ -41,6 +39,11 @@ type AttendanceSubmissionRecord = {
 type AttendanceDb = {
   submissions: AttendanceSubmissionRecord[];
 };
+
+declare global {
+  var __ATTENDANCE_DB__: AttendanceDb | undefined;
+  var __ATTENDANCE_WRITE_CHAIN__: Promise<void> | undefined;
+}
 
 type StudentMasterRecord = {
   id: string;
@@ -89,40 +92,42 @@ type AttendanceFilters = {
   date?: string;
 };
 
-const DB_DIR = path.join(process.cwd(), ".data");
-const DB_FILE = path.join(DB_DIR, "attendance-db.json");
+let writeChain: Promise<void> = globalThis.__ATTENDANCE_WRITE_CHAIN__ || Promise.resolve();
 
-let writeChain: Promise<void> = Promise.resolve();
-
-const ensureDbFile = async (): Promise<void> => {
-  await fs.mkdir(DB_DIR, { recursive: true });
-  try {
-    await fs.access(DB_FILE);
-  } catch {
-    const initial: AttendanceDb = { submissions: [] };
-    await fs.writeFile(DB_FILE, JSON.stringify(initial, null, 2), "utf-8");
+const safeClone = <T>(value: T): T => {
+  if (value == null) {
+    return value;
   }
+
+  try {
+    return structuredClone(value);
+  } catch {
+    try {
+      return JSON.parse(JSON.stringify(value)) as T;
+    } catch {
+      return value;
+    }
+  }
+};
+
+const getInMemoryDb = (): AttendanceDb => {
+  const current = globalThis.__ATTENDANCE_DB__;
+  if (!current || !Array.isArray(current.submissions)) {
+    globalThis.__ATTENDANCE_DB__ = { submissions: [] };
+  }
+  return globalThis.__ATTENDANCE_DB__ as AttendanceDb;
 };
 
 const readDb = async (): Promise<AttendanceDb> => {
-  await ensureDbFile();
-  try {
-    const content = await fs.readFile(DB_FILE, "utf-8");
-    const parsed = JSON.parse(content) as AttendanceDb;
-    if (!Array.isArray(parsed.submissions)) {
-      return { submissions: [] };
-    }
-    return parsed;
-  } catch {
-    return { submissions: [] };
-  }
+  const db = getInMemoryDb();
+  return safeClone(db);
 };
 
 const writeDb = async (db: AttendanceDb): Promise<void> => {
-  await ensureDbFile();
-  const tempFile = `${DB_FILE}.tmp`;
-  await fs.writeFile(tempFile, JSON.stringify(db, null, 2), "utf-8");
-  await fs.rename(tempFile, DB_FILE);
+  const nextSubmissions = Array.isArray(db?.submissions) ? db.submissions : [];
+  globalThis.__ATTENDANCE_DB__ = {
+    submissions: safeClone(nextSubmissions),
+  };
 };
 
 const queueWrite = async <T>(operation: () => Promise<T>): Promise<T> => {
@@ -131,6 +136,7 @@ const queueWrite = async <T>(operation: () => Promise<T>): Promise<T> => {
   writeChain = new Promise<void>((resolve) => {
     release = resolve;
   });
+  globalThis.__ATTENDANCE_WRITE_CHAIN__ = writeChain;
 
   await previous;
   try {
@@ -239,16 +245,19 @@ const filterSubmissions = (
 
 export const upsertAttendanceSubmission = async (payload: SubmitAttendancePayload) => {
   return queueWrite(async () => {
-    const batch = (payload.batch || payload.year || "").trim();
-    const department = (payload.department || "").trim();
-    const section = normalizeSection(payload.section || payload.class || "");
-    const className = normalizeSection(payload.class || payload.section || "");
-    const subject = (payload.subject || "").trim();
-    const subjectCode = (payload.subjectCode || "").trim();
-    const periods = Array.isArray(payload.periods) ? payload.periods : [];
-    const date = (payload.date || new Date().toISOString().split("T")[0]).trim();
-    const staffId = (payload.staffId || "").trim();
-    const staffName = (payload.staffName || staffId || "").trim();
+    const safePayload =
+      payload && typeof payload === "object" ? payload : ({} as SubmitAttendancePayload);
+
+    const batch = (safePayload.batch || safePayload.year || "").trim();
+    const department = (safePayload.department || "").trim();
+    const section = normalizeSection(safePayload.section || safePayload.class || "");
+    const className = normalizeSection(safePayload.class || safePayload.section || "");
+    const subject = (safePayload.subject || "").trim();
+    const subjectCode = (safePayload.subjectCode || "").trim();
+    const periods = Array.isArray(safePayload.periods) ? safePayload.periods : [];
+    const date = (safePayload.date || new Date().toISOString().split("T")[0]).trim();
+    const staffId = (safePayload.staffId || "").trim();
+    const staffName = (safePayload.staffName || staffId || "").trim();
 
     if (!batch || !department || !section || !subject || !subjectCode || !date || !staffId) {
       throw new Error("Missing required fields: batch, department, section, subject, subjectCode, date, staffId");
@@ -262,8 +271,8 @@ export const upsertAttendanceSubmission = async (payload: SubmitAttendancePayloa
     const statusByRoll = new Map<string, NormalizedStatus>();
     const statusById = new Map<string, NormalizedStatus>();
 
-    if (Array.isArray(payload.attendanceList) && payload.attendanceList.length > 0) {
-      payload.attendanceList.forEach((entry) => {
+    if (Array.isArray(safePayload.attendanceList) && safePayload.attendanceList.length > 0) {
+      safePayload.attendanceList.forEach((entry) => {
         if (entry.rollNo) {
           statusByRoll.set(entry.rollNo, normalizeStatus(entry.status));
         }
@@ -273,7 +282,7 @@ export const upsertAttendanceSubmission = async (payload: SubmitAttendancePayloa
       });
     }
 
-    Object.entries(payload.attendance || {}).forEach(([key, value]) => {
+    Object.entries(safePayload.attendance || {}).forEach(([key, value]) => {
       statusByRoll.set(key, normalizeStatus(value));
     });
 
@@ -311,7 +320,7 @@ export const upsertAttendanceSubmission = async (payload: SubmitAttendancePayloa
       department,
       section,
       class: className,
-      semester: payload.semester || "",
+      semester: safePayload.semester || "",
       subject,
       subject_code: subjectCode,
       periods,
