@@ -331,7 +331,7 @@ export default function AdminViewOverallAttendance() {
             <div className="px-5 py-10 text-center text-sm text-gray-500">Loading overall stats...</div>
           ) : sortedStats.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-gray-500">
-              No attendance data found. Mark attendance first to see analytics.
+              Attendance not marked yet
             </div>
           ) : (
             <div className="overflow-x-auto">

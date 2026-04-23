@@ -27,12 +27,15 @@ export default function StaffConfirmation() {
   const absentCount = submission.attendance.filter(a => a.status === "Absent").length;
   const onDutyCount = submission.attendance.filter(a => a.status === "On-Duty").length;
   const filteredStudents = submission.attendance.filter(a => a.status === selectedFilter);
+  const periods = Array.isArray((submission as any).periods) ? submission.periods : [];
 
   // Format period display
-  const periodNames = submission.periods.map(p => p.name).join(", ");
-  const periodTimes = submission.periods.length === 1
-    ? `${formatTimeForDisplay(submission.periods[0].startTime)} - ${formatTimeForDisplay(submission.periods[0].endTime)}`
-    : `${formatTimeForDisplay(submission.periods[0].startTime)} - ${formatTimeForDisplay(submission.periods[submission.periods.length - 1].endTime)}`;
+  const periodNames = periods.map(p => p.name).join(", ");
+  const periodTimes = periods.length === 0
+    ? "N/A"
+    : periods.length === 1
+      ? `${formatTimeForDisplay(periods[0].startTime)} - ${formatTimeForDisplay(periods[0].endTime)}`
+      : `${formatTimeForDisplay(periods[0].startTime)} - ${formatTimeForDisplay(periods[periods.length - 1].endTime)}`;
 
   return (
     <PageLayout
@@ -78,7 +81,7 @@ export default function StaffConfirmation() {
             )}
             <div className="flex flex-col gap-1">
               <span className="text-neutral-secondary">Period(s):</span>
-              <span className="font-medium">{periodNames}</span>
+              <span className="font-medium">{periodNames || "N/A"}</span>
               <span className="text-xs text-neutral-secondary">{periodTimes}</span>
             </div>
             <div className="flex justify-between">

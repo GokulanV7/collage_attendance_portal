@@ -1,13 +1,15 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { AttendanceSubmission } from "@/types";
+import { api } from "@/lib/api";
 
 interface AttendanceContextType {
   submissions: AttendanceSubmission[];
   addSubmission: (submission: AttendanceSubmission) => void;
   getSubmissions: () => AttendanceSubmission[];
   clearSubmissions: () => void;
+  refreshSubmissions: () => Promise<void>;
 }
 
 const AttendanceContext = createContext<AttendanceContextType | undefined>(
@@ -19,6 +21,24 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({
 }) => {
   const [submissions, setSubmissions] = useState<AttendanceSubmission[]>([]);
   const storageKey = "attendanceSubmissions";
+
+  const refreshSubmissions = useCallback(async () => {
+    try {
+      const response = await api.getAttendance();
+      const records = Array.isArray(response?.data?.records)
+        ? response.data.records
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+
+      if (Array.isArray(records)) {
+        setSubmissions(records as AttendanceSubmission[]);
+        localStorage.setItem(storageKey, JSON.stringify(records));
+      }
+    } catch (error) {
+      console.error("Failed to fetch attendance submissions:", error);
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -50,14 +70,15 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({
     };
 
     window.addEventListener("storage", onStorageChange);
+    void refreshSubmissions();
     return () => {
       window.removeEventListener("storage", onStorageChange);
     };
-  }, []);
+  }, [refreshSubmissions]);
 
   const addSubmission = (submission: AttendanceSubmission) => {
     setSubmissions((prev) => {
-      const next = [...prev, submission];
+      const next = [submission, ...prev.filter((item) => item.id !== submission.id)];
       try {
         localStorage.setItem(storageKey, JSON.stringify(next));
       } catch (error) {
@@ -82,7 +103,7 @@ export const AttendanceProvider: React.FC<{ children: ReactNode }> = ({
 
   return (
     <AttendanceContext.Provider
-      value={{ submissions, addSubmission, getSubmissions, clearSubmissions }}
+      value={{ submissions, addSubmission, getSubmissions, clearSubmissions, refreshSubmissions }}
     >
       {children}
     </AttendanceContext.Provider>

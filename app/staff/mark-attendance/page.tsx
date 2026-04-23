@@ -8,16 +8,13 @@ import { Button } from "@/components/Button";
 import { RadioGroup, attendanceOptions } from "@/components/RadioGroup";
 import { ProgressIndicator } from "@/components/ProgressIndicator";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { getStudentsByClass, getBatches, getDepartments } from "@/data/mockDatabase";
 import { getPeriodConfig } from "@/data/periodConfigs";
 import { getPeriodRangeDisplay } from "@/utils/periodDetection";
-import { useAttendance } from "@/context/AttendanceContext";
 import { api } from "@/lib/api";
 import { Student, AttendanceStatus, AttendanceSubmission, Period } from "@/types";
 
 export default function StaffMarkAttendance() {
   const router = useRouter();
-  const { addSubmission } = useAttendance();
   const [students, setStudents] = useState<Student[]>([]);
   const [attendanceMap, setAttendanceMap] = useState<Map<string, AttendanceStatus>>(new Map());
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -58,16 +55,30 @@ export default function StaffMarkAttendance() {
     // Set staff name
     setStaffName(savedStaffName || "");
 
-    // Load students
-    const fetchedStudents = getStudentsByClass(batch, dept, classId);
-    setStudents(fetchedStudents);
+    const className = classId.split("-").pop() || classId;
 
-    // Initialize all as Present
-    const initialMap = new Map<string, AttendanceStatus>();
-    fetchedStudents.forEach((student) => {
-      initialMap.set(student.id, "Present");
-    });
-    setAttendanceMap(initialMap);
+    const loadStudents = async () => {
+      try {
+        const response = await api.getStudents(batch, dept, className, className);
+        const fetchedStudents = Array.isArray(response?.data)
+          ? (response.data as Student[])
+          : [];
+
+        setStudents(fetchedStudents);
+
+        const initialMap = new Map<string, AttendanceStatus>();
+        fetchedStudents.forEach((student) => {
+          initialMap.set(student.id, "Present");
+        });
+        setAttendanceMap(initialMap);
+      } catch (error) {
+        console.error("Failed to load students:", error);
+        setStudents([]);
+        setAttendanceMap(new Map());
+      }
+    };
+
+    void loadStudents();
 
     // Get period configuration and selected periods
     const duration = parseInt(periodDuration);
@@ -115,14 +126,8 @@ export default function StaffMarkAttendance() {
   const handleConfirmSubmit = () => {
     setShowConfirmPopup(false);
     setIsLoading(true);
+    const staffId = sessionStorage.getItem("staffId") || "";
 
-    // Simulate API call delay
-    setTimeout(() => {
-      const staffId = sessionStorage.getItem("staffId") || "";
-      
-      // Get readable names
-      const batchName = getBatches().find(b => b.id === contextInfo.batch)?.name || "";
-      const deptName = getDepartments(contextInfo.batch).find(d => d.id === contextInfo.department)?.name || "";
       const className = contextInfo.class.split("-")[1] || contextInfo.class;
 
       // Build attendance records
@@ -138,9 +143,9 @@ export default function StaffMarkAttendance() {
       const submission: AttendanceSubmission = {
         id: `ATT${Date.now()}`,
         batchId: contextInfo.batch,
-        batch: batchName,
+        batch: contextInfo.batch,
         departmentId: contextInfo.department,
-        department: deptName,
+        department: contextInfo.department,
         classId: contextInfo.class,
         class: className,
         semester: contextInfo.semester,
@@ -169,24 +174,30 @@ export default function StaffMarkAttendance() {
         semester: contextInfo.semester,
         subject: contextInfo.subject,
         subjectCode: contextInfo.subjectCode,
+        periods: contextInfo.periods,
         date: submission.date,
         attendance: attendancePayload,
         attendanceList: attendanceRecords,
       };
 
-      api
-        .submitAttendance(payload)
-        .then(() => {
-          addSubmission(submission);
-          sessionStorage.setItem("lastSubmission", JSON.stringify(submission));
-          router.push("/staff/confirmation");
-        })
-        .catch((error) => {
-          console.error("Failed to submit attendance:", error);
-          alert(error?.message || "Failed to submit attendance. Please try again.");
-          setIsLoading(false);
+    api
+      .submitAttendance(payload)
+      .then(async () => {
+        await api.getAttendance({
+          year: contextInfo.batch,
+          department: contextInfo.department,
+          section: className,
+          subjectCode: contextInfo.subjectCode,
+          date: submission.date,
         });
-    }, 1500);
+        sessionStorage.setItem("lastSubmission", JSON.stringify(submission));
+        router.push("/staff/confirmation");
+      })
+      .catch((error) => {
+        console.error("Failed to submit attendance:", error);
+        alert(error?.message || "Failed to submit attendance. Please try again.");
+        setIsLoading(false);
+      });
   };
 
   const handleCancelConfirm = () => {
