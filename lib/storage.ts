@@ -104,7 +104,7 @@ export const storage = {
     }
   },
 
-  // Initialize from backend
+  // Initialize from internal API
   async initializeFromBackend() {
     if (typeof window === "undefined") return false;
     try {
@@ -119,7 +119,7 @@ export const storage = {
       }
       return false;
     } catch (error) {
-      console.error("Failed to initialize from backend:", error);
+      console.error("Failed to initialize from API:", error);
       return false;
     }
   },
