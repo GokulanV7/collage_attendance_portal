@@ -104,16 +104,13 @@ export const storage = {
     }
   },
 
-  // Initialize from backend
+  // Initialize from internal API
   async initializeFromBackend() {
     if (typeof window === "undefined") return false;
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/data/init`,
-        {
-          method: "POST",
-        },
-      );
+      const response = await fetch("/api/data/init", {
+        method: "POST",
+      });
       const data = await response.json();
 
       if (data.success && data.data?.students) {
@@ -122,7 +119,7 @@ export const storage = {
       }
       return false;
     } catch (error) {
-      console.error("Failed to initialize from backend:", error);
+      console.error("Failed to initialize from API:", error);
       return false;
     }
   },

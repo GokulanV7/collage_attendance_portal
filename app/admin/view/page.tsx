@@ -295,7 +295,7 @@ export default function AdminViewOverallAttendance() {
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">Student-wise Overall Stats</h2>
-              <p className="text-xs text-gray-500">Backend aggregated analytics view</p>
+              <p className="text-xs text-gray-500">API aggregated analytics view</p>
             </div>
             <div className="flex gap-2">
               <button
@@ -331,7 +331,7 @@ export default function AdminViewOverallAttendance() {
             <div className="px-5 py-10 text-center text-sm text-gray-500">Loading overall stats...</div>
           ) : sortedStats.length === 0 ? (
             <div className="px-5 py-10 text-center text-sm text-gray-500">
-              No attendance data found. Mark attendance first to see analytics.
+              Attendance not marked yet
             </div>
           ) : (
             <div className="overflow-x-auto">

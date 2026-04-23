@@ -226,3 +226,4 @@ export const generateAttendanceSummary = (
     alert("Failed to generate summary. Please try again.");
   }
 };
+

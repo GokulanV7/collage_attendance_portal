@@ -123,49 +123,17 @@ export const parseExcelFile = async (file: File): Promise<{
   data: ParsedStudentRow[];
   errors: string[];
 }> => {
-  const isCSV = file.name.toLowerCase().endsWith('.csv');
-
   return new Promise((resolve) => {
     const reader = new FileReader();
 
     reader.onload = (e) => {
       try {
-        let jsonData: Record<string, unknown>[];
-
-        if (isCSV) {
-          // Parse CSV natively - strip BOM if present
-          let text = e.target?.result as string;
-          if (text.charCodeAt(0) === 0xFEFF) {
-            text = text.slice(1);
-          }
-          const lines = text.split(/\r?\n/).filter((line) => line.trim() !== '');
-          
-          if (lines.length < 2) {
-            resolve({
-              success: false,
-              data: [],
-              errors: ['CSV file is empty or has no data rows'],
-            });
-            return;
-          }
-
-          const headers = lines[0].split(',').map((h) => h.trim());
-          jsonData = lines.slice(1).map((line) => {
-            const values = line.split(',').map((v) => v.trim());
-            const row: Record<string, unknown> = {};
-            headers.forEach((header, i) => {
-              row[header] = values[i] ?? '';
-            });
-            return row;
-          });
-        } else {
-          // Parse Excel with XLSX
-          const data = e.target?.result;
-          const workbook = XLSX.read(data, { type: 'array' });
-          const sheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[sheetName];
-          jsonData = XLSX.utils.sheet_to_json(worksheet) as Record<string, unknown>[];
-        }
+        // Parse Excel with XLSX
+        const data = e.target?.result;
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet) as Record<string, unknown>[];
 
         if (jsonData.length === 0) {
           resolve({
@@ -221,11 +189,7 @@ export const parseExcelFile = async (file: File): Promise<{
       });
     };
 
-    if (isCSV) {
-      reader.readAsText(file);
-    } else {
-      reader.readAsArrayBuffer(file);
-    }
+    reader.readAsArrayBuffer(file);
   });
 };
 
@@ -264,51 +228,21 @@ export const generateSampleTemplate = (): void => {
   ];
 
   const worksheet = XLSX.utils.json_to_sheet(sampleData);
-  
-  // Set column widths
+
   worksheet['!cols'] = [
-    { wch: 20 }, // name
-    { wch: 12 }, // rollNo
-    { wch: 12 }, // batch
-    { wch: 12 }, // department
-    { wch: 12 }, // class
-    { wch: 10 }, // semester
-    { wch: 25 }, // email
-    { wch: 15 }, // phone
+    { wch: 20 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 10 },
+    { wch: 25 },
+    { wch: 15 },
   ];
 
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Students');
-
-  // Download
   XLSX.writeFile(workbook, 'student_template.xlsx');
-};
-
-export const exportStudentsToCSV = (students: AdminStudent[]): void => {
-  const headers = ['Name', 'Roll No', 'Batch', 'Department', 'Class', 'Semester', 'Email', 'Phone'];
-  const rows = students.map((s) => [
-    s.name,
-    s.rollNo,
-    s.batch,
-    s.department,
-    s.class,
-    s.semester,
-    s.email || '',
-    s.phone || '',
-  ]);
-
-  const csvContent = [
-    headers.join(','),
-    ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-  ].join('\n');
-
-  const blob = new Blob([csvContent], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `students-${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
 };
 
 export const exportStudentsToExcel = (students: AdminStudent[]): void => {

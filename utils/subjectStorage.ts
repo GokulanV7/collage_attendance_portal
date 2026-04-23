@@ -464,25 +464,3 @@ export const clearSemesterData = (semesterId: string): boolean => {
   }
 };
 
-/**
- * Export semester subjects to CSV format (utility for future export feature)
- */
-export const exportSemesterSubjectsAsCSV = (semesterId: string): string => {
-  try {
-    const subjects = getSubjects(semesterId);
-    const headers = ["Code", "Name", "Credits", "Faculty", "Classes"];
-    const rows = subjects.map((s) => [
-      s.code,
-      s.name,
-      s.credits.toString(),
-      s.faculty || "",
-      s.classesAssigned.join(";"),
-    ]);
-
-    const csv = [headers, ...rows].map((row) => row.join(",")).join("\n");
-    return csv;
-  } catch (error) {
-    console.error("Error exporting subjects:", error);
-    return "";
-  }
-};

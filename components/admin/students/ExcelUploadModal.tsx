@@ -43,8 +43,8 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
     if (!file) return;
 
     // Validate file type
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
-      setParseErrors(['Please upload an Excel (.xlsx, .xls) or CSV (.csv) file']);
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      setParseErrors(['Please upload an Excel file (.xlsx or .xls)']);
       return;
     }
 
@@ -194,7 +194,7 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
             <h2 className="text-xl font-semibold text-gray-900">
-              {step === 'upload' && 'Upload Excel / CSV File'}
+              {step === 'upload' && 'Upload Excel File'}
               {step === 'preview' && 'Preview Students'}
               {step === 'result' && 'Upload Complete'}
             </h2>
@@ -257,16 +257,14 @@ export const ExcelUploadModal: React.FC<ExcelUploadModalProps> = ({
                           d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                         />
                       </svg>
-                      <p className="mt-4 text-gray-600">
-                        Drag and drop an Excel or CSV file here, or click to browse
-                      </p>
+                      <p className="mt-4 text-gray-600">Drag and drop an Excel file here, or click to browse</p>
                       <p className="mt-1 text-sm text-gray-400">
-                        Supports .xlsx, .xls, and .csv files
+                        Supports .xlsx and .xls files
                       </p>
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept=".xlsx,.xls,.csv"
+                        accept=".xlsx,.xls"
                         onChange={handleFileSelect}
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                       />

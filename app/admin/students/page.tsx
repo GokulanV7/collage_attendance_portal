@@ -8,7 +8,7 @@ import { useStudents } from '@/context/StudentsContext';
 import { AdminStudent } from '@/types';
 import { safeSessionStorage } from '@/utils/safeSessionStorage';
 import { getBatches } from '@/data/mockDatabase';
-import { generateSampleTemplate, exportStudentsToCSV, exportStudentsToExcel } from '@/utils/excel/studentExcel';
+import { generateSampleTemplate, exportStudentsToExcel } from '@/utils/excel/studentExcel';
 
 type View = 'classes' | 'students';
 
@@ -461,7 +461,7 @@ export default function StudentsPage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  Template
+                  Excel Template
                 </button>
                 <button
                   onClick={() => setShowUploadModal(true)}
@@ -505,13 +505,6 @@ export default function StudentsPage() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => exportStudentsToCSV(classStudents)}
-                    disabled={classStudents.length === 0}
-                    className="px-3 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
-                  >
-                    Export CSV
-                  </button>
                   <button
                     onClick={() => exportStudentsToExcel(classStudents)}
                     disabled={classStudents.length === 0}

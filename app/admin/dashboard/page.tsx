@@ -3,10 +3,11 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AdminLayout } from "@/components/admin";
-import { useAttendance } from "@/context/AttendanceContext";
 import { useStudents } from "@/context/StudentsContext";
 import { safeSessionStorage } from "@/utils/safeSessionStorage";
 import { generateAttendanceReport, AttendanceRecord as ReportAttendanceRecord } from "@/utils/excelGenerator";
+import { api } from "@/lib/api";
+import { AttendanceSubmission } from "@/types";
 import {
   AreaChart,
   Area,
@@ -145,8 +146,8 @@ const CustomChartTooltip = ({ active, payload, label }: any) => {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { submissions } = useAttendance();
   const { students } = useStudents();
+  const [submissions, setSubmissions] = useState<AttendanceSubmission[]>([]);
   
   // State
   const [adminDept, setAdminDept] = useState<string | null>(null);
@@ -164,6 +165,20 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
 
+  const refreshSubmissions = useCallback(async () => {
+    try {
+      const response = await api.getAttendance();
+      const records = Array.isArray(response?.data?.records)
+        ? response.data.records
+        : Array.isArray(response?.data)
+          ? response.data
+          : [];
+      setSubmissions(records as AttendanceSubmission[]);
+    } catch (error) {
+      console.error("Failed to refresh submissions:", error);
+    }
+  }, []);
+
   // Auth check
   useEffect(() => {
     const isAdmin = safeSessionStorage.getItem("isAdmin");
@@ -175,7 +190,24 @@ export default function AdminDashboard() {
     const name = safeSessionStorage.getItem("adminDeptName") || "Admin";
     setAdminDept(dept);
     setAdminName(name);
-  }, [router]);
+    void refreshSubmissions();
+  }, [router, refreshSubmissions]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      void refreshSubmissions();
+    }, 10000);
+
+    const onFocus = () => {
+      void refreshSubmissions();
+    };
+
+    window.addEventListener("focus", onFocus);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [refreshSubmissions]);
 
   const departmentSubmissions = useMemo(() => {
     return submissions.filter((submission) =>
@@ -441,14 +473,21 @@ export default function AdminDashboard() {
     const rows: ReportAttendanceRecord[] = [];
 
     filteredSubmissions.forEach((submission) => {
-      submission.attendance.forEach((record) => {
+      const periodLabel = Array.isArray((submission as any).periods)
+        ? (submission as any).periods.map((period: any) => period?.name).filter(Boolean).join(", ")
+        : "";
+      const attendanceList = Array.isArray((submission as any).attendance)
+        ? (submission as any).attendance
+        : [];
+
+      attendanceList.forEach((record: any) => {
         rows.push({
           date: submission.date,
           batch: submission.batch,
           department: submission.department,
           className: submission.class,
           semester: submission.semester,
-          period: submission.periods.map((period) => period.name).join(", "),
+          period: periodLabel || "N/A",
           staffId: submission.staffId,
           staffName: submission.staffName,
           rollNo: record.rollNo,
@@ -565,7 +604,7 @@ export default function AdminDashboard() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Generate Report
+                Generate Excel
               </button>
             </div>
           </div>
@@ -700,7 +739,7 @@ export default function AdminDashboard() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  Export Excel
+                    Export Excel
                 </button>
               </div>
             </div>

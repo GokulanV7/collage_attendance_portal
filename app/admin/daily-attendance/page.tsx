@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AdminLayout } from "@/components/admin";
 import { api } from "@/lib/api";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 type SubjectOption = {
   code: string;
@@ -197,64 +196,39 @@ export default function DailyAttendancePage() {
     [subjectStatus, selectedSubjectCode],
   );
 
-  const downloadCsv = () => {
-    if (!attendanceDetail?.marked) return;
-    const rows = attendanceDetail.studentAttendance.map((student) => [
-      student.rollNo,
-      student.studentName,
-      student.status,
-    ]);
-
-    const content = [
-      ["Batch", selectedBatch],
-      ["Department", selectedDepartment],
-      ["Section", selectedSection],
-      ["Subject", `${selectedSubject?.name || ""} (${selectedSubjectCode})`],
-      ["Date", selectedDate],
-      ["Marked By", attendanceDetail.markedBy || ""],
-      [],
-      ["Roll No", "Student Name", "Status"],
-      ...rows,
-    ]
-      .map((row) => row.join(","))
-      .join("\n");
-
-    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `attendance_${selectedBatch}_${selectedDepartment}_${selectedSection}_${selectedSubjectCode}_${selectedDate}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadPdf = () => {
+  const downloadExcel = () => {
     if (!attendanceDetail?.marked) return;
 
-    const doc = new jsPDF();
-    doc.setFontSize(14);
-    doc.text("Daily Attendance Report", 14, 16);
-    doc.setFontSize(10);
-    doc.text(`Batch: ${selectedBatch}`, 14, 24);
-    doc.text(`Department: ${selectedDepartment}`, 14, 30);
-    doc.text(`Section: ${selectedSection}`, 14, 36);
-    doc.text(`Subject: ${selectedSubject?.name || ""} (${selectedSubjectCode})`, 14, 42);
-    doc.text(`Date: ${selectedDate}`, 14, 48);
-    doc.text(`Marked By: ${attendanceDetail.markedBy || "N/A"}`, 14, 54);
+    const exportRows = attendanceDetail.studentAttendance.map((student) => ({
+      Batch: selectedBatch,
+      Department: selectedDepartment,
+      Section: selectedSection,
+      Subject: `${selectedSubject?.name || ""} (${selectedSubjectCode})`,
+      Date: selectedDate,
+      "Marked By": attendanceDetail.markedBy || "",
+      "Roll No": student.rollNo,
+      "Student Name": student.studentName,
+      Status: student.status,
+    }));
 
-    autoTable(doc, {
-      startY: 62,
-      head: [["Roll No", "Student Name", "Status"]],
-      body: attendanceDetail.studentAttendance.map((student) => [
-        student.rollNo,
-        student.studentName,
-        student.status,
-      ]),
-      styles: { fontSize: 9 },
-    });
+    const worksheet = XLSX.utils.json_to_sheet(exportRows);
+    worksheet["!cols"] = [
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 30 },
+      { wch: 12 },
+      { wch: 20 },
+      { wch: 14 },
+      { wch: 24 },
+      { wch: 12 },
+    ];
 
-    doc.save(
-      `attendance_${selectedBatch}_${selectedDepartment}_${selectedSection}_${selectedSubjectCode}_${selectedDate}.pdf`,
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+    XLSX.writeFile(
+      workbook,
+      `attendance_${selectedBatch}_${selectedDepartment}_${selectedSection}_${selectedSubjectCode}_${selectedDate}.xlsx`,
     );
   };
 
@@ -415,7 +389,7 @@ export default function DailyAttendancePage() {
             ) : loadingDetail ? (
               <p className="mt-5 text-sm text-gray-500">Loading attendance data...</p>
             ) : !attendanceDetail ? (
-              <p className="mt-5 text-sm text-gray-500">No data found for current selection.</p>
+              <p className="mt-5 text-sm text-gray-500">Attendance not marked yet</p>
             ) : (
               <>
                 <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -439,17 +413,10 @@ export default function DailyAttendancePage() {
                   <div className="mt-3 flex gap-2">
                     <button
                       type="button"
-                      onClick={downloadCsv}
+                      onClick={downloadExcel}
                       className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
                     >
-                      Download CSV
-                    </button>
-                    <button
-                      type="button"
-                      onClick={downloadPdf}
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-                    >
-                      Download PDF
+                      Download Excel
                     </button>
                   </div>
                 )}

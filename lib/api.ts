@@ -4,7 +4,7 @@ interface RequestOptions {
   body?: any;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = "/api";
 
 async function request(endpoint: string, options: RequestOptions = {}) {
   const url = `${API_URL}${endpoint}`;
@@ -19,8 +19,14 @@ async function request(endpoint: string, options: RequestOptions = {}) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "API Error");
+    let message = "API Error";
+    try {
+      const error = await response.json();
+      message = error.message || message;
+    } catch {
+      // Keep generic message when response is not valid JSON.
+    }
+    throw new Error(message);
   }
 
   return response.json();
@@ -49,20 +55,23 @@ export const api = {
 
   // Attendance
   async submitAttendance(data: any) {
-    return request("/attendance/submit", {
+    return request("/attendance", {
       method: "POST",
       body: data,
     });
   },
 
   async getAttendance(filters?: any) {
-    let url = "/attendance/all";
+    let url = "/attendance";
     if (filters) {
       const params = new URLSearchParams();
       if (filters.year) params.append("year", filters.year);
       if (filters.department) params.append("department", filters.department);
       if (filters.class) params.append("class", filters.class);
       if (filters.section) params.append("section", filters.section);
+      if (filters.subject) params.append("subject", filters.subject);
+      if (filters.subjectCode) params.append("subjectCode", filters.subjectCode);
+      if (filters.date) params.append("date", filters.date);
       url += `?${params.toString()}`;
     }
     return request(url);
